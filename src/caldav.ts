@@ -79,14 +79,21 @@ export async function getEventsFromCalendar() {
     throw new Error('Could not find Calendar');
   }
 
-  const calendarObjects = await client.fetchCalendarObjects({
-    calendar,
+  const filter = {
     timeRange: {
       start: DateTime.now()
+        .toUTC()
         .set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
         .toISO(),
-      end: DateTime.now().plus({ days: 7 }).toISO(),
+      end: DateTime.now().toUTC().plus({ days: 7 }).toISO(),
     },
+  };
+
+  logger.info(filter, 'Fetching calendar items');
+
+  const calendarObjects = await client.fetchCalendarObjects({
+    calendar,
+    ...filter,
   });
 
   logger.info({ calendarObjects }, 'Recieved calendar obects');

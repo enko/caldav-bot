@@ -59,7 +59,7 @@ async function main() {
 
   const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 
-  await bot.telegram.sendMessage(
+  const results = await bot.telegram.sendMessage(
     process.env.TELEGRAM_CHANNEL_ID,
     formatMetadataToMarkdown(events),
     {
@@ -67,6 +67,8 @@ async function main() {
       disable_web_page_preview: true,
     },
   );
+
+  logger.info({ results }, 'Sent a message');
 }
 
 void main();
