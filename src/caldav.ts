@@ -1,98 +1,23 @@
 import { DAVCalendar, DAVObject, createDAVClient } from 'tsdav';
 import * as ical from 'ical';
 
-import { CalendarProvider, Event } from './types';
+import { CalendarProvider, CalendarProviderSymbol, Event } from './types';
 import { DateTime } from 'luxon';
 import { createLogger } from './logger';
 import { sortBy } from 'lodash';
+import Container from 'typedi';
 
 const logger = createLogger('caldav');
 
-function extractMonikaMetaDataFromCalendarObject(
-  calendar: DAVCalendar,
-  component: ical.CalendarComponent,
-) {
-  if (!('start' in component)) {
-    return undefined;
-  }
-
-  const { summary, start, attach } = component;
-
-  if (typeof summary === 'undefined') {
-    return undefined;
-  }
-
-  if (typeof start === 'undefined') {
-    return undefined;
-  }
-
-  if (typeof attach !== 'string') {
-    return undefined;
-  }
-
-  let calendarName = calendar.displayName;
-
-  if (typeof calendarName !== 'string') {
-    calendarName = '';
-  }
-
-  return {
-    summary: summary.replace('Birthday of ', '').replace('Geburtstag von ', ''),
-    date: DateTime.fromJSDate(start),
-    link: attach,
-    calendarName,
-  };
-}
-
-function extractNextcloudMetaDataFromCalendarObject(
-  calendar: DAVCalendar,
-  component: ical.CalendarComponent,
-) {
-  if (!('start' in component)) {
-    return undefined;
-  }
-
-  console.dir(component);
-
-  const { summary, start, location } = component;
-
-  if (typeof summary === 'undefined') {
-    return undefined;
-  }
-
-  if (typeof start === 'undefined') {
-    return undefined;
-  }
-
-  if (typeof location !== 'string') {
-    return undefined;
-  }
-
-  let calendarName = calendar.displayName;
-
-  if (typeof calendarName !== 'string') {
-    calendarName = '';
-  }
-
-  return {
-    summary: summary.replace('Birthday of ', '').replace('Geburtstag von ', ''),
-    date: DateTime.fromJSDate(start),
-    link: location,
-    calendarName,
-  };
-}
-
-function extractMetadataFromCalendarObjects(
+async function extractMetadataFromCalendarObjects(
   calendar: DAVCalendar,
   calendarObjects: DAVObject[],
 ) {
   const items: Event[] = [];
 
-  const provider = process.env.CALENDAR_PROVIDER;
-
-  if (typeof provider === 'undefined') {
-    throw new Error('Please configure CALENDAR_PROVIDER');
-  }
+  const provider = Container.get<CalendarProvider>(
+    CalendarProviderSymbol.toString(),
+  );
 
   for (const entry of calendarObjects) {
     const data = entry.data;
@@ -106,15 +31,10 @@ function extractMetadataFromCalendarObjects(
     for (const keys of Object.keys(calendarEntry)) {
       const value = calendarEntry[keys];
 
-      let item: Event | undefined;
-
-      if (provider === CalendarProvider.Monika) {
-        item = extractMonikaMetaDataFromCalendarObject(calendar, value);
-      } else if (provider === CalendarProvider.Nextcloud) {
-        item = extractNextcloudMetaDataFromCalendarObject(calendar, value);
-      } else {
-        throw new Error('Unknown Calendar Provider');
-      }
+      const item = await provider.extractmetaDataFromCalendarObject(
+        calendar,
+        value,
+      );
 
       if (typeof item === 'undefined') {
         continue;
@@ -123,6 +43,8 @@ function extractMetadataFromCalendarObjects(
       items.push(item);
     }
   }
+
+  console.dir(items);
 
   return sortBy(items, (item) =>
     item.date.set({ year: DateTime.now().year }).toISODate(),
@@ -195,10 +117,11 @@ export async function getEventsFromCalendar(durationInDays: number) {
 
     logger.info({ calendarObjects }, 'Recieved calendar obects');
 
-    const objects = extractMetadataFromCalendarObjects(
+    const objects = await extractMetadataFromCalendarObjects(
       calendar,
       calendarObjects,
     );
+
     for (const item of objects) {
       results.push(item);
     }

@@ -1,4 +1,6 @@
 import { DateTime } from 'luxon';
+import { DAVCalendar } from 'tsdav';
+import * as ical from 'ical';
 
 export type Event = {
   summary: string;
@@ -7,7 +9,28 @@ export type Event = {
   calendarName: string;
 };
 
-export enum CalendarProvider {
+export enum CalendarProviderType {
   Nextcloud = 'nextcloud',
   Monika = 'monika',
+}
+
+export const CalendarProviderSymbol = Symbol('CalendarProvider');
+
+export interface CalendarProvider {
+  extractmetaDataFromCalendarObject(
+    calendar: DAVCalendar,
+    component: ical.CalendarComponent,
+  ): Promise<Event | undefined>;
+
+  formatMetadataToMarkdown(events: Event[], durationInDays: number): string;
+}
+
+export enum MessengerType {
+  Telegram = 'telegram',
+}
+
+export const MessageSymbol = Symbol('Messenger');
+
+export interface Messenger {
+  sendMessage(channel: string, message: string): Promise<unknown>;
 }

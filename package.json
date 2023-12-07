@@ -31,7 +31,14 @@
     "luxon": "3.4.3",
     "pino": "8.16.0",
     "pino-pretty": "10.2.3",
+    "reflect-metadata": "0.1.13",
+    "remark": "15.0.1",
+    "remark-parse": "11.0.0",
+    "remark-stringify": "11.0.0",
     "telegraf": "4.14.0",
-    "tsdav": "2.0.5"
+    "tsdav": "2.0.5",
+    "typedi": "0.10.0",
+    "unified": "11.0.4",
+    "unist-util-visit": "5.0.0"
   }
 }
