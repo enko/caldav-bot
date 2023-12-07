@@ -12,9 +12,9 @@ function escapeTelegramCharacters() {
     visit(tree, function (node) {
       if (node.type === 'text') {
         node.value = node.value
-          .replace('(', '\\(')
-          .replace(')', '\\)')
-          .replace('-', '\\-');
+          .replace(/\(/g, '\\(')
+          .replace(/\)/g, '\\)')
+          .replace(/-/g, '\\-');
       }
     });
   };
@@ -28,9 +28,7 @@ export class TelegramMessenger implements Messenger {
       .use(remarkStringify)
       .process(text);
 
-    console.dir(safe);
-
-    return safe.toString();
+    return safe.toString().replace(/\\\\/g, '\\');
   }
 
   public async sendMessage(channel: string, message: string) {

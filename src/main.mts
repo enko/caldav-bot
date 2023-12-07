@@ -81,9 +81,15 @@ async function main() {
     CalendarProviderSymbol.toString(),
   ).formatMetadataToMarkdown(events, calendarDuration);
 
-  const results = await Container.get<Messenger>(
-    MessageSymbol.toString(),
-  ).sendMessage('', markdown);
+  const messenger = Container.get<Messenger>(MessageSymbol.toString());
+
+  const channelId = process.env.CHANNEL_ID;
+
+  if (typeof channelId === 'undefined') {
+    throw new Error('Please configure CHANNEL_ID');
+  }
+
+  const results = await messenger.sendMessage(channelId, markdown);
 
   logger.info({ results }, 'Sent a message');
 }
