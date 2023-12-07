@@ -50,17 +50,19 @@ export class NextcloudCalendarProvider implements CalendarProvider {
     }
 
     const groupdEvents = lodash.groupBy(events, (item) =>
-      item.date.set({ year: DateTime.now().year }).toISODate(),
+      item.date.toISODate(),
     );
 
     const formatItem = (item: Event) => {
       const name = item.summary;
       const calendar = item.calendarName;
 
-      if (item.link.length > 0) {
-        return `📅 ${name} ([Ort](${item.link})) (${calendar})`;
+      const isLink = item.link.startsWith('http');
+
+      if (isLink) {
+        return `📅 ${item.date.toFormat('HH:mm')} ${name} ([Treffpunkt](${item.link})) (${calendar})`;
       } else {
-        return `📅 ${name} (${calendar})`;
+        return `📅 ${item.date.toFormat('HH:mm')} ${name} (${calendar})`;
       }
     };
 
