@@ -1,11 +1,11 @@
 import { DAVCalendar, DAVObject, createDAVClient } from 'tsdav';
-import * as ical from 'ical';
+import ical from 'ical';
 
-import { CalendarProvider, CalendarProviderSymbol, Event } from './types';
+import { CalendarProvider, CalendarProviderSymbol, Event } from './types.mjs';
 import { DateTime } from 'luxon';
-import { createLogger } from './logger';
-import { sortBy } from 'lodash';
-import Container from 'typedi';
+import { createLogger } from './logger.mjs';
+import lodash from 'lodash';
+import { Container } from 'typedi';
 
 const logger = createLogger('caldav');
 
@@ -44,9 +44,7 @@ async function extractMetadataFromCalendarObjects(
     }
   }
 
-  console.dir(items);
-
-  return sortBy(items, (item) =>
+  return lodash.sortBy(items, (item) =>
     item.date.set({ year: DateTime.now().year }).toISODate(),
   );
 }

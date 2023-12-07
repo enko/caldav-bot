@@ -1,6 +1,5 @@
 import 'dotenv/config';
-import { createLogger } from './logger';
-
+import { createLogger } from './logger.mjs';
 import {
   CalendarProvider,
   CalendarProviderSymbol,
@@ -8,12 +7,12 @@ import {
   Messenger,
   MessengerType,
   MessageSymbol,
-} from './types';
-import { getEventsFromCalendar } from './caldav';
-import { MonicaCalendarProvider } from './calendar-providers/monica';
-import Container from 'typedi';
-import { NextcloudCalendarProvider } from './calendar-providers/nextcloud';
-import { TelegramMessenger } from './messenger/telegram';
+} from './types.mjs';
+import { getEventsFromCalendar } from './caldav.mjs';
+import { MonicaCalendarProvider } from './calendar-providers/monica.mjs';
+import { Container } from 'typedi';
+import { NextcloudCalendarProvider } from './calendar-providers/nextcloud.mjs';
+import { TelegramMessenger } from './messenger/telegram.mjs';
 
 const logger = createLogger('main');
 

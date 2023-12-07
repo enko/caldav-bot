@@ -1,8 +1,8 @@
 import { CalendarComponent } from 'ical';
 import { DAVCalendar } from 'tsdav';
-import { CalendarProvider, Event } from '../types';
+import { CalendarProvider, Event } from '../types.mjs';
 import { DateTime } from 'luxon';
-import { groupBy } from 'lodash';
+import lodash from 'lodash';
 
 export class NextcloudCalendarProvider implements CalendarProvider {
   public async extractmetaDataFromCalendarObject(
@@ -49,7 +49,7 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       return `Keine Termine in den nächsten ${durationInDays} Tagen gefunden.`;
     }
 
-    const groupdEvents = groupBy(events, (item) =>
+    const groupdEvents = lodash.groupBy(events, (item) =>
       item.date.set({ year: DateTime.now().year }).toISODate(),
     );
 
