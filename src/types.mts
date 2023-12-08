@@ -27,6 +27,7 @@ export interface CalendarProvider {
 
 export enum MessengerType {
   Telegram = 'telegram',
+  Matrix = 'matrix',
 }
 
 export const MessageSymbol = Symbol('Messenger');

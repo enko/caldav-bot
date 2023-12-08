@@ -13,6 +13,7 @@ import { MonicaCalendarProvider } from './calendar-providers/monica.mjs';
 import { Container } from 'typedi';
 import { NextcloudCalendarProvider } from './calendar-providers/nextcloud.mjs';
 import { TelegramMessenger } from './messenger/telegram.mjs';
+import { MatrixMessenger } from './messenger/matrix.mjs';
 
 const logger = createLogger('main');
 
@@ -60,8 +61,11 @@ function configureMessenger() {
   if (messenger === MessengerType.Telegram) {
     const provider = new TelegramMessenger();
     Container.set(MessageSymbol.toString(), provider);
+  } else if (messenger === MessengerType.Matrix) {
+    const provider = new MatrixMessenger();
+    Container.set(MessageSymbol.toString(), provider);
   } else {
-    throw new Error('Unknown Calendar Provider');
+    throw new Error('Unknown Messenger');
   }
 }
 
@@ -92,6 +96,8 @@ async function main() {
   const results = await messenger.sendMessage(channelId, markdown);
 
   logger.info({ results }, 'Sent a message');
+
+  process.exit(0);
 }
 
 void main();

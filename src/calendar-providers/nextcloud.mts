@@ -60,9 +60,9 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       const isLink = item.link.startsWith('http');
 
       if (isLink) {
-        return `📅 ${item.date.toFormat('HH:mm')} ${name} ([Treffpunkt](${item.link})) (${calendar})`;
+        return `📅 ${item.date.toFormat('HH:mm')} ${name} ([Treffpunkt](${item.link})) (${calendar})  `;
       } else {
-        return `📅 ${item.date.toFormat('HH:mm')} ${name} (${calendar})`;
+        return `📅 ${item.date.toFormat('HH:mm')} ${name} (${calendar})  `;
       }
     };
 
@@ -71,7 +71,7 @@ export class NextcloudCalendarProvider implements CalendarProvider {
     output += '\n\n';
 
     for (const date of Object.keys(groupdEvents)) {
-      output += `*${date}*\n`;
+      output += `**${date}**  \n`;
 
       for (const event of groupdEvents[date]) {
         output += formatItem(event);
