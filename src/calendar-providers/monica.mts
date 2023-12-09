@@ -55,7 +55,6 @@ export class MonicaCalendarProvider implements CalendarProvider {
     const groupdEvents = lodash.groupBy(events, (item) =>
       item.date.set({ year: DateTime.now().year }).toISODate(),
     );
-    console.dir(groupdEvents);
 
     const formatItem = (item: Event) => {
       const age = item.date

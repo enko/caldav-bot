@@ -51,21 +51,9 @@ export class MatrixMessenger implements Messenger {
       cryptoStore: new sdk.LocalStorageCryptoStore(this.store),
     });
 
-    console.dir({
-      baseUrl: this.config.matrix.homeServerUrl,
-      userId,
-      deviceId: this.store.getItem('deviceId'),
-      accessToken: this.store.getItem('accessToken'),
-      store: new sdk.MemoryStore({ localStorage: this.store }),
-      cryptoStore: new sdk.LocalStorageCryptoStore(this.store),
-    });
-
     try {
-      const whoami = await this.client.whoami();
-
-      console.dir({ whoami });
+      await this.client.whoami();
     } catch (error) {
-      console.dir({ error });
       const registration = await this.client.loginWithPassword(
         userId,
         userPassword,
@@ -122,7 +110,6 @@ export class MatrixMessenger implements Messenger {
         setupNewCrossSigning: true,
       });
     } catch (err) {
-      console.error(err);
       // On error - log out so we don't leave stranded devices.
       await this.client.logout();
     }

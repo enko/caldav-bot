@@ -18,8 +18,6 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       return undefined;
     }
 
-    console.dir(component);
-
     const { summary, start, location } = component;
 
     if (typeof summary === 'undefined') {

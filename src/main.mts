@@ -68,8 +68,6 @@ async function main() {
 
   const config = Container.get<Config>(Config);
 
-  console.dir(config, { depth: null });
-
   configureCalendarProvider();
   configureMessenger();
 
