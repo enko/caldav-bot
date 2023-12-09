@@ -22,7 +22,7 @@ export interface CalendarProvider {
     component: ical.CalendarComponent,
   ): Promise<Event | undefined>;
 
-  formatMetadataToMarkdown(events: Event[], durationInDays: number): string;
+  formatMetadataToMarkdown(events: Event[]): string;
 }
 
 export enum MessengerType {

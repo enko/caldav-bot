@@ -6,16 +6,21 @@ import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
 import { LocalStorage } from 'node-localstorage';
 import Olm from '@matrix-org/olm';
+import { Config } from '../config';
+import { Service } from '@freshgum/typedi';
 
 global.Olm = Olm;
 
+@Service([Config])
 export class MatrixMessenger implements Messenger {
   public client: sdk.MatrixClient;
 
   private store = new LocalStorage('./store');
 
+  public constructor(private config: Config) {}
+
   private async setupSecretStorage() {
-    const cryptoPassphrase = process.env.MATRIX_CRYPTO_PASSWORD;
+    const cryptoPassphrase = this.config.matrix.cryptoPassword;
 
     const recoveryKey =
       await this.client.createRecoveryKeyFromPassphrase(cryptoPassphrase);
@@ -33,12 +38,12 @@ export class MatrixMessenger implements Messenger {
   private async initCrypto() {
     await global.Olm.init();
 
-    const userId = process.env.MATRIX_USER_ID;
+    const userId = this.config.matrix.userId;
 
-    const userPassword = process.env.MATRIX_USER_PASSWORD;
+    const userPassword = this.config.matrix.userPassword;
 
     this.client = sdk.createClient({
-      baseUrl: process.env.MATRIX_HOME_SERVER_URL,
+      baseUrl: this.config.matrix.homeServerUrl,
       userId,
       deviceId: this.store.getItem('deviceId'),
       accessToken: this.store.getItem('accessToken'),
@@ -47,7 +52,7 @@ export class MatrixMessenger implements Messenger {
     });
 
     console.dir({
-      baseUrl: process.env.MATRIX_HOME_SERVER_URL,
+      baseUrl: this.config.matrix.homeServerUrl,
       userId,
       deviceId: this.store.getItem('deviceId'),
       accessToken: this.store.getItem('accessToken'),
@@ -67,7 +72,7 @@ export class MatrixMessenger implements Messenger {
       );
 
       this.client = sdk.createClient({
-        baseUrl: process.env.MATRIX_HOME_SERVER_URL,
+        baseUrl: this.config.matrix.homeServerUrl,
         userId,
         accessToken: registration.access_token,
         deviceId: registration.device_id,

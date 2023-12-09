@@ -6,6 +6,8 @@ import type { Root } from 'mdast';
 
 import { Telegraf } from 'telegraf';
 import { Messenger } from '../types.mjs';
+import { Service } from '@freshgum/typedi';
+import { Config } from '../config';
 
 function escapeTelegramCharacters() {
   return function (tree: Root) {
@@ -20,7 +22,9 @@ function escapeTelegramCharacters() {
   };
 }
 
+@Service([Config])
 export class TelegramMessenger implements Messenger {
+  public constructor(private config: Config) {}
   private async sanitizeMarkdown(text: string) {
     const safe = await unified()
       .use(remarkParse)
@@ -32,7 +36,7 @@ export class TelegramMessenger implements Messenger {
   }
 
   public async sendMessage(channel: string, message: string) {
-    const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
+    const bot = new Telegraf(this.config.telegram.botToken);
 
     return bot.telegram.sendMessage(
       channel,

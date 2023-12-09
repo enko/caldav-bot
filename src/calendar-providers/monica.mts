@@ -3,8 +3,12 @@ import * as ical from 'ical';
 import { CalendarProvider, Event } from '../types.mjs';
 import { DateTime } from 'luxon';
 import lodash from 'lodash';
+import { Service } from '@freshgum/typedi';
+import { Config } from '../config';
 
+@Service([Config])
 export class MonicaCalendarProvider implements CalendarProvider {
+  public constructor(private config: Config) {}
   public async extractmetaDataFromCalendarObject(
     calendar: DAVCalendar,
     component: ical.CalendarComponent,
@@ -43,9 +47,9 @@ export class MonicaCalendarProvider implements CalendarProvider {
     };
   }
 
-  public formatMetadataToMarkdown(events: Event[], durationInDays: number) {
+  public formatMetadataToMarkdown(events: Event[]) {
     if (events.length === 0) {
-      return 'Keine Geburtstage in Monika in den nächsten 7 Tagen!';
+      return `Keine Geburtstage in Monika in den nächsten ${this.config.caldav.calendarDuration} Tagen!`;
     }
 
     const groupdEvents = lodash.groupBy(events, (item) =>
@@ -69,7 +73,7 @@ export class MonicaCalendarProvider implements CalendarProvider {
       return `📅 ${name} wird ${age} in ${days} Tagen ([Monika](${item.link}))`;
     };
 
-    let output = `🥳 Die nächsten ${durationInDays} Tage 🥳`;
+    let output = `🥳 Die nächsten ${this.config.caldav.calendarDuration} Tage 🥳`;
 
     output += '\n\n';
 

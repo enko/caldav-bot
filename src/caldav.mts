@@ -5,7 +5,8 @@ import { CalendarProvider, CalendarProviderSymbol, Event } from './types.mjs';
 import { DateTime } from 'luxon';
 import { createLogger } from './logger.mjs';
 import lodash from 'lodash';
-import { Container } from 'typedi';
+import { Container } from '@freshgum/typedi';
+import { Config } from './config';
 
 const logger = createLogger('caldav');
 
@@ -49,28 +50,20 @@ async function extractMetadataFromCalendarObjects(
   );
 }
 
-function getConfiguredeCalendars() {
-  const data = process.env.CALDAV_CALENDAR;
-
-  if (typeof data === 'undefined') {
-    throw new Error('Please configure CALDAV_CALENDAR');
-  }
-
-  return data.split('|');
-}
-
 export async function getEventsFromCalendar(durationInDays: number) {
+  const config = Container.get<Config>(Config);
+
   const client = await createDAVClient({
-    serverUrl: process.env.CALDAV_BASE_URL,
+    serverUrl: config.caldav.baseUrl,
     credentials: {
-      username: process.env.CALDAV_USER_NAME,
-      password: process.env.CALDAV_USER_PASSWORD,
+      username: config.caldav.userName,
+      password: config.caldav.userPassword,
     },
     authMethod: 'Basic',
     defaultAccountType: 'caldav',
   });
 
-  const configuredCalendars = getConfiguredeCalendars();
+  const configuredCalendars = config.caldav.calendars;
 
   const allCalendars = await client.fetchCalendars();
 

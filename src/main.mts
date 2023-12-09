@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import 'dotenv/config';
 import { createLogger } from './logger.mjs';
 import {
@@ -5,65 +6,58 @@ import {
   CalendarProviderSymbol,
   CalendarProviderType,
   Messenger,
-  MessengerType,
   MessageSymbol,
+  MessengerType,
 } from './types.mjs';
 import { getEventsFromCalendar } from './caldav.mjs';
 import { MonicaCalendarProvider } from './calendar-providers/monica.mjs';
-import { Container } from 'typedi';
+import { Container } from '@freshgum/typedi';
 import { NextcloudCalendarProvider } from './calendar-providers/nextcloud.mjs';
+import { Config } from './config';
 import { TelegramMessenger } from './messenger/telegram.mjs';
 import { MatrixMessenger } from './messenger/matrix.mjs';
 
 const logger = createLogger('main');
 
-function getCalendarDuration() {
-  const value = process.env.CALENDAR_DURATION;
-
-  if (typeof value !== 'string') {
-    throw new Error('Please configure CALENDAR_DURATION');
-  }
-
-  const calendarDuration = Number.parseInt(value);
-
-  if (Number.isNaN(calendarDuration)) {
-    throw new Error('Please set a number for CALENDAR_DURATION');
-  }
-
-  return calendarDuration;
-}
-
 function configureCalendarProvider() {
-  const provider = process.env.CALENDAR_PROVIDER;
+  const config = Container.get(Config);
 
-  if (typeof provider === 'undefined') {
-    throw new Error('Please configure CALENDAR_PROVIDER');
-  }
+  const provider = config.caldav.calendarProvider;
 
   if (provider === CalendarProviderType.Monika) {
-    const provider = new MonicaCalendarProvider();
-    Container.set(CalendarProviderSymbol.toString(), provider);
+    const provider = Container.get(MonicaCalendarProvider);
+    Container.set({
+      type: CalendarProviderSymbol.toString(),
+      value: provider,
+    });
   } else if (provider === CalendarProviderType.Nextcloud) {
-    const provider = new NextcloudCalendarProvider();
-    Container.set(CalendarProviderSymbol.toString(), provider);
+    const provider = Container.get(NextcloudCalendarProvider);
+    Container.set({
+      type: CalendarProviderSymbol.toString(),
+      value: provider,
+    });
   } else {
     throw new Error('Unknown Calendar Provider');
   }
 }
 
 function configureMessenger() {
-  const messenger = process.env.MESSENGER;
+  const config = Container.get(Config);
 
-  if (typeof messenger === 'undefined') {
-    throw new Error('Please configure MESSENGER');
-  }
+  const messenger = config.messenger;
 
   if (messenger === MessengerType.Telegram) {
-    const provider = new TelegramMessenger();
-    Container.set(MessageSymbol.toString(), provider);
+    const provider = Container.get(TelegramMessenger);
+    Container.set({
+      type: MessageSymbol.toString(),
+      value: provider,
+    });
   } else if (messenger === MessengerType.Matrix) {
-    const provider = new MatrixMessenger();
-    Container.set(MessageSymbol.toString(), provider);
+    const provider = Container.get(MatrixMessenger);
+    Container.set({
+      type: MessageSymbol.toString(),
+      value: provider,
+    });
   } else {
     throw new Error('Unknown Messenger');
   }
@@ -72,10 +66,14 @@ function configureMessenger() {
 async function main() {
   logger.info('Welcome to the caldav telegram bot 👋');
 
+  const config = Container.get<Config>(Config);
+
+  console.dir(config, { depth: null });
+
   configureCalendarProvider();
   configureMessenger();
 
-  const calendarDuration = getCalendarDuration();
+  const calendarDuration = config.caldav.calendarDuration;
 
   const events = await getEventsFromCalendar(calendarDuration);
 
@@ -83,17 +81,11 @@ async function main() {
 
   const markdown = Container.get<CalendarProvider>(
     CalendarProviderSymbol.toString(),
-  ).formatMetadataToMarkdown(events, calendarDuration);
+  ).formatMetadataToMarkdown(events);
 
   const messenger = Container.get<Messenger>(MessageSymbol.toString());
 
-  const channelId = process.env.CHANNEL_ID;
-
-  if (typeof channelId === 'undefined') {
-    throw new Error('Please configure CHANNEL_ID');
-  }
-
-  const results = await messenger.sendMessage(channelId, markdown);
+  const results = await messenger.sendMessage(config.channelId, markdown);
 
   logger.info({ results }, 'Sent a message');
 
