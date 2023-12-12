@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import lodash from 'lodash';
 import { Service } from '@freshgum/typedi';
 import { Config } from '../config';
+import { getNextDateFromRRule } from '../caldav.mjs';
 
 @Service([Config])
 export class NextcloudCalendarProvider implements CalendarProvider {
@@ -18,7 +19,7 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       return undefined;
     }
 
-    const { summary, start, location } = component;
+    const { summary, start, location, rrule } = component;
 
     if (typeof summary === 'undefined') {
       return undefined;
@@ -38,11 +39,17 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       calendarName = '';
     }
 
+    let date: DateTime | undefined;
+
+    if (typeof rrule !== 'undefined') {
+      date = getNextDateFromRRule(rrule);
+    } else {
+      date = DateTime.fromJSDate(start);
+    }
+
     return {
-      summary: summary
-        .replace('Birthday of ', '')
-        .replace('Geburtstag von ', ''),
-      date: DateTime.fromJSDate(start),
+      summary,
+      date,
       link: location,
       calendarName,
     };

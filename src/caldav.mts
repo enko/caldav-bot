@@ -1,5 +1,6 @@
 import { DAVCalendar, DAVObject, createDAVClient } from 'tsdav';
 import ical from 'ical';
+import RRule from 'rrule';
 
 import { CalendarProvider, CalendarProviderSymbol, Event } from './types.mjs';
 import { DateTime } from 'luxon';
@@ -9,6 +10,16 @@ import { Container } from '@freshgum/typedi';
 import { Config } from './config';
 
 const logger = createLogger('caldav');
+
+export function getNextDateFromRRule(rrule: RRule) {
+  const nextDate = rrule.after(DateTime.now().toJSDate(), true);
+
+  if (typeof nextDate === 'undefined') {
+    return undefined;
+  }
+
+  return DateTime.fromJSDate(nextDate);
+}
 
 async function extractMetadataFromCalendarObjects(
   calendar: DAVCalendar,
