@@ -2,7 +2,12 @@ import { DAVCalendar, DAVObject, createDAVClient } from 'tsdav';
 import ical from 'ical';
 import RRule from 'rrule';
 
-import { CalendarProvider, CalendarProviderSymbol, Event } from './types.mjs';
+import {
+  CalendarProvider,
+  CalendarProviderSymbol,
+  CalendarProviderType,
+  Event,
+} from './types.mjs';
 import { DateTime } from 'luxon';
 import { createLogger } from './logger.mjs';
 import lodash from 'lodash';
@@ -56,9 +61,13 @@ async function extractMetadataFromCalendarObjects(
     }
   }
 
-  return lodash.sortBy(items, (item) =>
-    item.date.set({ year: DateTime.now().year }).toISODate(),
-  );
+  if (CalendarProviderSymbol.toString() === CalendarProviderType.Monika) {
+    return lodash.sortBy(items, (item) =>
+      item.date.set({ year: DateTime.now().year }).toISODate(),
+    );
+  } else {
+    return lodash.sortBy(items, (item) => item.date.toISODate());
+  }
 }
 
 export async function getEventsFromCalendar(durationInDays: number) {
