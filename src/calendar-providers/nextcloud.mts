@@ -19,7 +19,7 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       return undefined;
     }
 
-    const { summary, start, location, rrule } = component;
+    const { summary, start, location, rrule, recurrences, status } = component;
 
     if (typeof summary === 'undefined') {
       return undefined;
@@ -33,6 +33,10 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       return undefined;
     }
 
+    if (status === 'CANCELLED') {
+      return undefined;
+    }
+
     let calendarName = calendar.displayName;
 
     if (typeof calendarName !== 'string') {
@@ -43,6 +47,17 @@ export class NextcloudCalendarProvider implements CalendarProvider {
 
     if (typeof rrule !== 'undefined') {
       date = getNextDateFromRRule(rrule);
+
+      if (typeof recurrences !== 'undefined') {
+        for (const recurrence of Object.keys(recurrences)) {
+          if (
+            recurrence === date.toISODate() &&
+            recurrences[recurrence].status === 'CANCELLED'
+          ) {
+            return;
+          }
+        }
+      }
     } else {
       date = DateTime.fromJSDate(start);
     }
