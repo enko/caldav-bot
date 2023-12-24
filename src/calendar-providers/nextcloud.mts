@@ -1,7 +1,7 @@
 import { CalendarComponent } from 'ical';
 import { DAVCalendar } from 'tsdav';
 import { CalendarProvider, Event } from '../types.mjs';
-import { DateTime } from 'luxon';
+import { DateTime, FixedOffsetZone } from 'luxon';
 import lodash from 'lodash';
 import { Service } from '@freshgum/typedi';
 import { Config } from '../config';
@@ -43,10 +43,11 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       calendarName = '';
     }
 
-    let date: DateTime | undefined;
+    let date = DateTime.fromJSDate(start);
 
     if (typeof rrule !== 'undefined') {
-      date = getNextDateFromRRule(rrule);
+      const offset = FixedOffsetZone.instance(date.offset);
+      date = getNextDateFromRRule(rrule).setZone(offset);
 
       if (typeof recurrences !== 'undefined') {
         for (const recurrence of Object.keys(recurrences)) {
@@ -58,8 +59,6 @@ export class NextcloudCalendarProvider implements CalendarProvider {
           }
         }
       }
-    } else {
-      date = DateTime.fromJSDate(start);
     }
 
     return {
