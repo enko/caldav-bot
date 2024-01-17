@@ -45,13 +45,13 @@ Everything is setup through environment variables. You can either use a `.env` f
 
 #### matrix
 
-| **Name**                 | **Description**                                                          |
-|--------------------------|--------------------------------------------------------------------------|
-| `MATRIX_HOME_SERVER_URL` | The base url of your homeserver                                          |
-| `MATRIX_USER_ID`         | Username of your bot                                                     |
-| `MATRIX_USER_PASSWORD`   | Password of your bot                                                     |
-| `MATRIX_CRYPTO_PASSWORD` | The password of your crypto password store when you created your account |
-| `MATRIX_SECRURITY_KEY`   | Your matrix security key                                                 |
+| **Name**                  | **Description**                                                     |
+|---------------------------|---------------------------------------------------------------------|
+| `MATRIX_HOME_SERVER_URL`  | The base url of your homeserver                                     |
+| `MATRIX_USER_ID`          | Username of your bot                                                |
+| `MATRIX_USER_PASSWORD`    | Password of your bot                                                |
+| `MATRIX_CRYPTO_DIRECTORY` | A path to a directory where all the crypto related stuff is saved   |
+| `MATRIX_SETTINGS_FILE`    | A path to a JSON file where the bot SDK will store all its settings |
 
 ## Origin
 

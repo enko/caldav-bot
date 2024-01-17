@@ -35,10 +35,6 @@ class MatrixConfig {
 
   public userPassword: string;
 
-  public cryptoPassword: string;
-
-  public securityKey: string;
-
   public settingsFile: string;
 
   public cryptoDirectory: string;
@@ -67,22 +63,6 @@ class MatrixConfig {
     }
 
     this.userPassword = userPassword;
-
-    const cryptoPassword = process.env.MATRIX_CRYPTO_PASSWORD;
-
-    if (typeof cryptoPassword !== 'string') {
-      throw new Error('MATRIX_CRYPTO_PASSWORD is not set');
-    }
-
-    this.cryptoPassword = cryptoPassword;
-
-    const securityKey = process.env.MATRIX_SECURITY_KEY;
-
-    if (typeof securityKey !== 'string') {
-      throw new Error('MATRIX_SECURITY_KEY is not set');
-    }
-
-    this.securityKey = securityKey;
 
     const settingsFile = process.env.MATRIX_SETTINGS_FILE;
 
