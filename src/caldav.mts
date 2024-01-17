@@ -61,13 +61,7 @@ async function extractMetadataFromCalendarObjects(
     }
   }
 
-  if (CalendarProviderSymbol.toString() === CalendarProviderType.Monika) {
-    return lodash.sortBy(items, (item) =>
-      item.date.set({ year: DateTime.now().year }).toISODate(),
-    );
-  } else {
-    return lodash.sortBy(items, (item) => item.date.toISODate());
-  }
+  return items;
 }
 
 export async function getEventsFromCalendar(durationInDays: number) {
@@ -138,5 +132,11 @@ export async function getEventsFromCalendar(durationInDays: number) {
     }
   }
 
-  return results;
+  if (CalendarProviderSymbol.toString() === CalendarProviderType.Monika) {
+    return lodash.sortBy(results, (item) =>
+      item.date.set({ year: DateTime.now().year }).toISODate(),
+    );
+  } else {
+    return lodash.sortBy(results, (item) => item.date.toISODate());
+  }
 }
