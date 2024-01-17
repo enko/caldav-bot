@@ -1,5 +1,8 @@
 import { Service } from '@freshgum/typedi';
 import { CalendarProviderType, MessengerType } from './types.mjs';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import appRoot from 'app-root-path';
 
 class TelegramConfig {
   public botName: string;
@@ -35,6 +38,10 @@ class MatrixConfig {
   public cryptoPassword: string;
 
   public securityKey: string;
+
+  public settingsFile: string;
+
+  public cryptoDirectory: string;
 
   public constructor() {
     const homeServerUrl = process.env.MATRIX_HOME_SERVER_URL;
@@ -76,6 +83,52 @@ class MatrixConfig {
     }
 
     this.securityKey = securityKey;
+
+    const settingsFile = process.env.MATRIX_SETTINGS_FILE;
+
+    if (typeof settingsFile !== 'string') {
+      throw new Error('MATRIX_SETTINGS_FILE is not set');
+    }
+
+    let fullSettingsFile: string;
+
+    if (settingsFile.startsWith('/')) {
+      fullSettingsFile = settingsFile;
+    } else {
+      fullSettingsFile = path.resolve(appRoot.path, settingsFile);
+    }
+
+    try {
+      fs.accessSync(fullSettingsFile, fs.constants.R_OK);
+    } catch (error: unknown) {
+      throw new Error(`Can't access settings file at ${fullSettingsFile}`);
+    }
+
+    this.settingsFile = fullSettingsFile;
+
+    const cryptoDirectory = process.env.MATRIX_CRYPTO_DIRECTORY;
+
+    if (typeof cryptoDirectory !== 'string') {
+      throw new Error('MATRIX_CRYPTO_DIRECTORY is not set');
+    }
+
+    let fullCryptoDirectory: string;
+
+    if (cryptoDirectory.startsWith('/')) {
+      fullCryptoDirectory = cryptoDirectory;
+    } else {
+      fullCryptoDirectory = path.resolve(appRoot.path, cryptoDirectory);
+    }
+
+    try {
+      fs.accessSync(fullCryptoDirectory, fs.constants.R_OK | fs.constants.X_OK);
+    } catch (error: unknown) {
+      throw new Error(
+        `Can't access crypto directory at ${fullCryptoDirectory}`,
+      );
+    }
+
+    this.cryptoDirectory = fullCryptoDirectory;
   }
 }
 
