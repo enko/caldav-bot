@@ -7,7 +7,7 @@ import type { Root } from 'mdast';
 import { Telegraf } from 'telegraf';
 import { Messenger } from '../types.mjs';
 import { Service } from '@freshgum/typedi';
-import { Config } from '../config';
+import { Config } from '../config.mjs';
 
 function escapeTelegramCharacters() {
   return function (tree: Root) {

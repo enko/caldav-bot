@@ -4,7 +4,7 @@ import { CalendarProvider, Event } from '../types.mjs';
 import { DateTime } from 'luxon';
 import lodash from 'lodash';
 import { Service } from '@freshgum/typedi';
-import { Config } from '../config';
+import { Config } from '../config.mjs';
 
 @Service([Config])
 export class MonicaCalendarProvider implements CalendarProvider {

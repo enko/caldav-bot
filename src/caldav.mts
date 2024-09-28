@@ -12,7 +12,7 @@ import { DateTime } from 'luxon';
 import { createLogger } from './logger.mjs';
 import lodash from 'lodash';
 import { Container } from '@freshgum/typedi';
-import { Config } from './config';
+import { Config } from './config.mjs';
 
 const logger = createLogger('caldav');
 

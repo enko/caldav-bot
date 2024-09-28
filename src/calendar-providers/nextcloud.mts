@@ -4,7 +4,7 @@ import { CalendarProvider, Event } from '../types.mjs';
 import { DateTime, FixedOffsetZone } from 'luxon';
 import lodash from 'lodash';
 import { Service } from '@freshgum/typedi';
-import { Config } from '../config';
+import { Config } from '../config.mjs';
 import { getNextDateFromRRule } from '../caldav.mjs';
 
 @Service([Config])

@@ -13,7 +13,7 @@ import { getEventsFromCalendar } from './caldav.mjs';
 import { MonicaCalendarProvider } from './calendar-providers/monica.mjs';
 import { Container } from '@freshgum/typedi';
 import { NextcloudCalendarProvider } from './calendar-providers/nextcloud.mjs';
-import { Config } from './config';
+import { Config } from './config.mjs';
 import { TelegramMessenger } from './messenger/telegram.mjs';
 import { MatrixMessenger } from './messenger/matrix.mjs';
 
@@ -26,14 +26,14 @@ function configureCalendarProvider() {
 
   if (provider === CalendarProviderType.Monika) {
     const provider = Container.get(MonicaCalendarProvider);
-    Container.set({
-      type: CalendarProviderSymbol.toString(),
+    Container.set<CalendarProvider>({
+      id: CalendarProviderSymbol.toString(),
       value: provider,
     });
   } else if (provider === CalendarProviderType.Nextcloud) {
     const provider = Container.get(NextcloudCalendarProvider);
     Container.set({
-      type: CalendarProviderSymbol.toString(),
+      id: CalendarProviderSymbol.toString(),
       value: provider,
     });
   } else {
@@ -49,13 +49,13 @@ function configureMessenger() {
   if (messenger === MessengerType.Telegram) {
     const provider = Container.get(TelegramMessenger);
     Container.set({
-      type: MessageSymbol.toString(),
+      id: MessageSymbol.toString(),
       value: provider,
     });
   } else if (messenger === MessengerType.Matrix) {
     const provider = Container.get(MatrixMessenger);
     Container.set({
-      type: MessageSymbol.toString(),
+      id: MessageSymbol.toString(),
       value: provider,
     });
   } else {

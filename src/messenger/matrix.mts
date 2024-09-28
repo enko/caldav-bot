@@ -4,7 +4,7 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
 import Olm from '@matrix-org/olm';
-import { Config } from '../config';
+import { Config } from '../config.mjs';
 import { Service } from '@freshgum/typedi';
 import {
   MatrixAuth,
