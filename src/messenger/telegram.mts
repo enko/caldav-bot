@@ -16,7 +16,8 @@ function escapeTelegramCharacters() {
         node.value = node.value
           .replace(/\(/g, '\\(')
           .replace(/\)/g, '\\)')
-          .replace(/-/g, '\\-');
+          .replace(/-/g, '\\-')
+          .replace(/!/g, '\\!');
       }
     });
   };
