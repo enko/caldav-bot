@@ -7,10 +7,15 @@ This directory contains the test suite for the CalDAV Telegram Bot v2 project.
 ```
 test/
 ├── unit/                              # Unit tests
+│   ├── caldav-expansion.test.mts     # Fixture-driven recurrence expansion
+│   ├── config.test.mts               # Environment schema validation
 │   ├── monica-provider.test.mts      # Monica calendar provider tests
-│   ├── nextcloud-provider.test.mts   # Nextcloud calendar provider tests
-│   └── caldav.test.mts               # CalDAV utility function tests
-└── fixtures/                          # Test data fixtures (future)
+│   └── nextcloud-provider.test.mts   # Nextcloud calendar provider tests
+└── fixtures/                          # Real ICS files used by the expansion tests
+    ├── recurring-weekly.ics
+    ├── recurrence-override.ics
+    ├── recurrence-cancelled.ics
+    └── recurrence-exdate.ics
 ```
 
 ## Running Tests
@@ -44,16 +49,15 @@ The project uses [Vitest](https://vitest.dev/) for testing:
 ### High Coverage (>95%)
 
 - `MonicaCalendarProvider` - Birthday formatting and extraction logic
-- `NextcloudCalendarProvider` - Event formatting and extraction logic
-
-### Partial Coverage (~10%)
-
-- `caldav.mts` - Only `getNextDateFromRRule()` tested
-- `config.mts` - Not tested (configuration loading)
+- `NextcloudCalendarProvider` - Event formatting, extraction and recurrence
+  expansion
+- `config.mts` - Schema validation, conversion and error messages
 
 ### Not Tested
 
 - `main.mts` - Application entry point
+- `caldav.mts` - Needs a CalDAV server; the parse-and-expand half it delegates
+  to is covered by `caldav-expansion.test.mts`
 - `messenger/` - Telegram and Matrix integrations
 - `logger.mts` - Simple logging setup
 
@@ -71,25 +75,34 @@ Tests for Monica CRM birthday calendar provider:
 - German text prefixes removal
 - Edge cases (missing fields, invalid data)
 
-#### `nextcloud-provider.test.mts` (16 tests)
+#### `nextcloud-provider.test.mts` (14 tests)
 
 Tests for Nextcloud calendar event provider:
 
-- Event metadata extraction from ICS components
-- Recurring event handling with RRule
-- Cancelled event detection
+- Event extraction from hand-built VEVENT components
+- Window filtering, cancelled event detection
 - Markdown formatting with location links
 - Time formatting (HH:mm)
 
-#### `caldav.test.mts` (12 tests)
+#### `caldav-expansion.test.mts` (4 tests)
 
-Tests for CalDAV utility functions:
+Drives the ICS files in `fixtures/` through `node-ical`'s parser and the
+Nextcloud provider, so parsing and recurrence expansion are exercised together:
 
-- `getNextDateFromRRule()` - RRule date calculation
-- Daily, weekly, monthly, yearly recurrences
-- Birthday recurrence patterns
-- Edge cases (expired rules, count limits)
-- Timezone handling
+- Every occurrence of a weekly series inside the window
+- A `RECURRENCE-ID` override reported at its new date and time (issue #5)
+- A cancelled occurrence dropped without losing the series
+- `EXDATE` exclusions honoured
+
+#### `config.test.mts` (8 tests)
+
+Tests for the arktype configuration schema:
+
+- A complete environment parses, with conversion and defaulting
+- Every invalid key is reported in a single error
+- Unknown `MESSENGER`, empty calendar list, bad provider spelling, malformed
+  Matrix user id
+- Undeclared environment variables are stripped from the result
 
 ## Writing New Tests
 
@@ -97,7 +110,7 @@ Tests for CalDAV utility functions:
 
 ```typescript
 import { describe, it, expect, beforeEach } from 'vitest';
-import { YourClass } from '../../src/your-module.mjs';
+import { YourClass } from '../../src/your-module.mts';
 
 describe('YourClass', () => {
   let instance: YourClass;
@@ -123,34 +136,42 @@ describe('YourClass', () => {
 
 ### Mocking Dependencies
 
-#### Mocking TypeDI Container
+Providers and messengers take the scalars they use, so most tests need no
+mocking at all:
 
 ```typescript
-const mockConfig = {
-  caldav: { calendarDuration: 30 },
-};
-const provider = new MonicaCalendarProvider(mockConfig as any);
+const provider = new MonicaCalendarProvider(30);
 ```
 
 #### Mocking Modules
 
 ```typescript
-vi.mock('../../src/caldav.mjs', () => ({
-  getNextDateFromRRule: vi.fn(() => DateTime.now().plus({ days: 5 })),
+vi.mock('../../src/config.mts', () => ({
+  loadConfig: vi.fn(() => ({ MESSENGER: 'telegram' })),
 }));
 ```
 
-#### Freezing Time
+#### Freezing Time and Zone
+
+Pin the zone as well whenever an assertion mentions a wall-clock time, or the
+test depends on the host:
 
 ```typescript
 import { Settings } from 'luxon';
 
+let originalNow: () => number;
+let originalZone: Settings['defaultZone'];
+
 beforeEach(() => {
-  Settings.now = () => new Date('2024-01-15T10:00:00Z').valueOf();
+  originalNow = Settings.now;
+  originalZone = Settings.defaultZone;
+  Settings.defaultZone = 'Europe/Berlin';
+  Settings.now = () => new Date('2026-03-02T08:00:00Z').valueOf();
 });
 
 afterEach(() => {
-  Settings.now = () => Date.now();
+  Settings.now = originalNow;
+  Settings.defaultZone = originalZone;
 });
 ```
 
@@ -158,10 +179,9 @@ afterEach(() => {
 
 ### Priority Areas
 
-1. Integration tests for `extractMetadataFromCalendarObjects()`
-2. End-to-end tests with mocked CalDAV server
-3. Messenger formatting tests (Telegram MarkdownV2 escaping)
-4. Configuration validation tests
+1. `fetchEvents()` against a mocked CalDAV server
+2. Messenger formatting tests (Telegram MarkdownV2 escaping)
+3. All-day and multi-day event handling
 
 ### Lower Priority
 
@@ -169,31 +189,23 @@ afterEach(() => {
 - Performance benchmarks for large calendars
 - Error handling and logging tests
 
-## CI/CD Integration
+## CI
 
-To add tests to your CI pipeline:
-
-```yaml
-# Example GitHub Actions
-- name: Run tests
-  run: npm test
-
-- name: Generate coverage
-  run: npm run test:coverage
-
-- name: Upload coverage
-  uses: codecov/codecov-action@v3
-```
+`.github/workflows/ci.yml` runs `npm run typecheck`, `npm run lint`,
+`npm run format:check` and `npm test` on Node 24 and 26 for every push to main
+and every pull request.
 
 ## Troubleshooting
 
 ### Tests fail with ESM errors
 
-Ensure `"type": "module"` is set in `package.json` and all imports use `.mjs` extensions.
+Ensure `"type": "module"` is set in `package.json`. Sources import each other
+with explicit `.mts` extensions.
 
 ### DateTime tests fail inconsistently
 
-Make sure to freeze time in tests using Luxon's `Settings.now` to avoid timezone issues.
+Freeze both `Settings.now` and `Settings.defaultZone`; a test asserting a
+wall-clock time passes locally and fails on CI, which runs in UTC.
 
 ### Coverage not generated
 
