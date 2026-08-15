@@ -2,7 +2,6 @@ import { DAVCalendar } from 'tsdav';
 import { VEvent } from 'node-ical';
 import { CalendarProvider, Event } from '../types.mjs';
 import { DateTime } from 'luxon';
-import lodash from 'lodash';
 
 export class MonicaCalendarProvider implements CalendarProvider {
   public constructor(private readonly durationInDays: number) {}
@@ -45,10 +44,15 @@ export class MonicaCalendarProvider implements CalendarProvider {
       return `Keine Geburtstage in Monika in den nächsten ${this.durationInDays} Tagen!`;
     }
 
-    const key = (item: Event) =>
-      item.date.set({ year: DateTime.now().year }).toISODate();
+    const year = DateTime.now().year;
+    const key = (event: Event) => event.date.set({ year }).toISODate();
 
-    const groupdEvents = lodash.groupBy(lodash.sortBy(events, key), key);
+    // Object.groupBy keeps insertion order for non-index keys, so sorting first
+    // orders both the date headings and the entries under them.
+    const grouped = Object.groupBy(
+      events.toSorted((a, b) => key(a).localeCompare(key(b))),
+      key,
+    );
 
     const formatItem = (item: Event) => {
       const age = item.date
@@ -70,10 +74,11 @@ export class MonicaCalendarProvider implements CalendarProvider {
 
     output += '\n\n';
 
-    for (const date of Object.keys(groupdEvents)) {
+    // Object.groupBy returns Partial<Record<K, V[]>>, hence the ?? [].
+    for (const [date, group] of Object.entries(grouped)) {
       output += `*${date}*\n`;
 
-      for (const event of groupdEvents[date]) {
+      for (const event of group ?? []) {
         output += formatItem(event);
         output += '\n';
       }

@@ -2,7 +2,6 @@ import { VEvent } from 'node-ical';
 import { DAVCalendar } from 'tsdav';
 import { CalendarProvider, Event } from '../types.mjs';
 import { DateTime, FixedOffsetZone } from 'luxon';
-import lodash from 'lodash';
 import { getNextDateFromRRule } from '../caldav.mjs';
 
 export class NextcloudCalendarProvider implements CalendarProvider {
@@ -72,10 +71,12 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       return `Keine Termine in den nächsten ${this.durationInDays} Tagen gefunden.`;
     }
 
-    const groupdEvents = lodash.groupBy(
-      lodash.sortBy(events, (item) => item.date.toISODate()),
-      (item) => item.date.toISODate(),
+    // Object.groupBy keeps insertion order for non-index keys, so sorting first
+    // orders both the date headings and the entries under them.
+    const sorted = events.toSorted(
+      (a, b) => a.date.toMillis() - b.date.toMillis(),
     );
+    const grouped = Object.groupBy(sorted, (item) => item.date.toISODate());
 
     const formatItem = (item: Event) => {
       const name = item.summary;
@@ -94,10 +95,11 @@ export class NextcloudCalendarProvider implements CalendarProvider {
 
     output += '\n\n';
 
-    for (const date of Object.keys(groupdEvents)) {
+    // Object.groupBy returns Partial<Record<K, V[]>>, hence the ?? [].
+    for (const [date, group] of Object.entries(grouped)) {
       output += `**${date}**  \n`;
 
-      for (const event of groupdEvents[date]) {
+      for (const event of group ?? []) {
         output += formatItem(event);
         output += '\n';
       }
