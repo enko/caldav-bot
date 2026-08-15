@@ -39,11 +39,10 @@
     "vitest": "4.1.10"
   },
   "dependencies": {
-    "@matrix-org/olm": "3.2.15",
     "app-root-path": "3.1.0",
     "dotenv": "16.3.1",
     "luxon": "3.7.2",
-    "matrix-bot-sdk": "0.7.0",
+    "matrix-bot-sdk": "0.8.0",
     "node-ical": "0.27.1",
     "pino": "8.17.2",
     "pino-pretty": "10.3.1",
