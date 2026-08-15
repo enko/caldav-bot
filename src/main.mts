@@ -47,7 +47,8 @@ async function main() {
 
   const events = await fetchEvents(config, provider);
 
-  logger.info({ events }, 'Recieved events');
+  logger.info({ count: events.length }, 'Collected events');
+  logger.debug({ events }, 'Collected events');
 
   const markdown = provider.formatMetadataToMarkdown(events);
 
