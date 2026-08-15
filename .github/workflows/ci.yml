@@ -41,6 +41,8 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+    outputs:
+      version: ${{ steps.semantic_release.outputs.version }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -53,6 +55,85 @@ jobs:
           node-version: 24.x
           cache: npm
       - run: npm ci
-      - run: npx semantic-release
+      - id: semantic_release
+        run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  image:
+    # Runs only when semantic-release actually published: no release, no output,
+    # no image. A tag-triggered workflow cannot be used - see ADR-0008.
+    needs: release
+    if: needs.release.outputs.version != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The tag semantic-release just created. Its package.json carries the
+          # released version; the commit this run started from still has the old
+          # one, because @semantic-release/git commits the bump afterwards.
+          ref: v${{ needs.release.outputs.version }}
+      - uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.release.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release.outputs.version }}
+            type=semver,pattern={{major}},value=${{ needs.release.outputs.version }}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Keeps the package listing to the two real platforms instead of adding
+          # unknown/unknown attestation entries.
+          provenance: false
+
+  image-check:
+    # Independent of `check`: a broken Dockerfile is orthogonal to lint and tests,
+    # and this way both report in parallel.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Needed for the diff against the base commit below.
+          fetch-depth: 0
+      - id: changes
+        run: |
+          if git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD \
+            | grep -qE '^(Dockerfile|\.dockerignore|package\.json|package-lock\.json|tsconfig\.json|src/)'; then
+            echo 'relevant=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'relevant=false' >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.changes.outputs.relevant == 'true'
+        uses: docker/setup-buildx-action@v4
+      - if: steps.changes.outputs.relevant == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

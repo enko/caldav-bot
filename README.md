@@ -109,15 +109,31 @@ last log line.
 
 ### Docker
 
+Released images are published to the GitHub Container Registry. The package is
+public, so pulling needs no login:
+
 ```sh
-docker build -t caldav-bot .
-docker run --rm --init --env-file .env caldav-bot
+docker pull ghcr.io/enko/caldav-bot:1
+docker run --rm --init --env-file .env ghcr.io/enko/caldav-bot:1
 
 # Matrix additionally needs its state to survive between runs:
 docker run --rm --init --env-file .env \
   -v "$PWD/crypto:/app/crypto" \
   -v "$PWD/settings.json:/app/settings.json" \
-  caldav-bot
+  ghcr.io/enko/caldav-bot:1
+```
+
+Tags: `1.4.2` is immutable, `1.4` and `1` follow the latest patch/minor of that
+line, `latest` follows every release. Pin `1` for a deployment that should get
+fixes, or the full version when you want to decide upgrades yourself. Images are
+built for `linux/amd64` and `linux/arm64`.
+
+To build from a checkout instead — for development, or to run an unreleased
+commit:
+
+```sh
+docker build -t caldav-bot .
+docker run --rm --init --env-file .env caldav-bot
 ```
 
 The container runs as uid 1000, so anything bind-mounted for
@@ -137,6 +153,9 @@ when CI passes on `main`, so:
 - **`CHANGELOG.md` is generated — do not edit it by hand.** Fix a wrong entry by
   fixing the commit message it came from.
 - The bot is not published to npm; the package is `private`.
+- Each release also builds and pushes `ghcr.io/enko/caldav-bot` for
+  `linux/amd64` and `linux/arm64`. The image is built from the release tag, so
+  the `version` in its `package.json` matches the tag.
 
 ## Origin
 

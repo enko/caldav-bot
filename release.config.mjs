@@ -60,5 +60,14 @@ export default {
           'chore(release): ${nextRelease.version}\n\n${nextRelease.notes}',
       },
     ],
+    [
+      '@semantic-release/exec',
+      {
+        // Hands the released version to the job that builds the image. Guarded so
+        // that running `npx semantic-release` outside Actions stays a no-op.
+        publishCmd:
+          'if [ -n "$GITHUB_OUTPUT" ]; then echo "version=${nextRelease.version}" >> "$GITHUB_OUTPUT"; fi',
+      },
+    ],
   ],
 };

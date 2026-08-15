@@ -146,7 +146,9 @@ Dockerfile uses a three-stage build:
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, format:check and tests on
 Node 24 and 26, then releases from `main` with `semantic-release`. The version,
 the tag and `CHANGELOG.md` come from the commit messages — the changelog is
-generated, so never edit it by hand.
+generated, so never edit it by hand. A release also publishes
+`ghcr.io/enko/caldav-bot` for `linux/amd64` and `linux/arm64`, tagged `X.Y.Z`,
+`X.Y`, `X` and `latest`.
 
 ## Use Case
 

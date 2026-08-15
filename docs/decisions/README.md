@@ -13,7 +13,8 @@ successor and a `superseded by` status on the old one.
 | [0005](0005-node-24-typescript-6-no-loader.md)      | Require Node 24 LTS and TypeScript 6, and run the sources without a loader | accepted |
 | [0006](0006-ndjson-logs-and-natural-exit.md)        | Write NDJSON to stdout through a synchronous destination                   | accepted |
 | [0007](0007-releases-from-commit-messages.md)       | Derive versions and the changelog from commit messages                     | accepted |
+| [0008](0008-publish-the-image-to-ghcr.md)           | Publish the container image to GHCR on release                             | accepted |
 
 0001–0006 were backfilled on 2026-08-15 from the modernization series, so the code
-already reflected them when they were written; 0007 was written together with the
-change it describes.
+already reflected them when they were written; 0007 and 0008 were written together
+with the changes they describe.
