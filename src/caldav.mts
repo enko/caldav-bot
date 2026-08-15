@@ -1,6 +1,6 @@
 import { DAVCalendar, DAVObject, createDAVClient } from 'tsdav';
 import ical from 'ical';
-import RRule from 'rrule';
+import type { RRule } from 'rrule';
 
 import {
   CalendarProvider,
