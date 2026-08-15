@@ -3,7 +3,7 @@ import { MonicaCalendarProvider } from '../../src/calendar-providers/monica.mjs'
 import { DateTime } from 'luxon';
 import { Event } from '../../src/types.mjs';
 import { DAVCalendar } from 'tsdav';
-import * as ical from 'ical';
+import type { VEvent } from 'node-ical';
 
 describe('MonicaCalendarProvider', () => {
   let provider: MonicaCalendarProvider;
@@ -172,12 +172,12 @@ describe('MonicaCalendarProvider', () => {
     });
 
     it('should extract birthday data correctly', async () => {
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('1990-05-15'),
         summary: 'Birthday of John Doe',
         attach: 'https://monica.test/contact/1',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -191,12 +191,12 @@ describe('MonicaCalendarProvider', () => {
     });
 
     it('should remove "Birthday of " prefix from summary', async () => {
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('1990-05-15'),
         summary: 'Birthday of Jane Smith',
         attach: 'https://monica.test/contact/2',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -204,12 +204,12 @@ describe('MonicaCalendarProvider', () => {
     });
 
     it('should remove "Geburtstag von " prefix from summary', async () => {
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('1990-05-15'),
         summary: 'Geburtstag von Max Mustermann',
         attach: 'https://monica.test/contact/3',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -221,7 +221,7 @@ describe('MonicaCalendarProvider', () => {
         type: 'VEVENT',
         summary: 'Birthday of John Doe',
         attach: 'https://monica.test/contact/1',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -229,11 +229,11 @@ describe('MonicaCalendarProvider', () => {
     });
 
     it('should return undefined if component has no summary', async () => {
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('1990-05-15'),
         attach: 'https://monica.test/contact/1',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -241,12 +241,12 @@ describe('MonicaCalendarProvider', () => {
     });
 
     it('should return undefined if attach is not a string', async () => {
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('1990-05-15'),
         summary: 'Birthday of John Doe',
         attach: undefined,
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -258,12 +258,12 @@ describe('MonicaCalendarProvider', () => {
         url: 'https://test.com/calendar',
       } as DAVCalendar;
 
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('1990-05-15'),
         summary: 'Birthday of John Doe',
         attach: 'https://monica.test/contact/1',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(
         calendarWithoutName,

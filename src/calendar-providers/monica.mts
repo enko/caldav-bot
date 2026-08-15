@@ -1,5 +1,5 @@
 import { DAVCalendar } from 'tsdav';
-import * as ical from 'ical';
+import { VEvent } from 'node-ical';
 import { CalendarProvider, Event } from '../types.mjs';
 import { DateTime } from 'luxon';
 import lodash from 'lodash';
@@ -7,17 +7,12 @@ import lodash from 'lodash';
 export class MonicaCalendarProvider implements CalendarProvider {
   public constructor(private readonly durationInDays: number) {}
 
-  public async extractEvents(
-    calendar: DAVCalendar,
-    component: ical.CalendarComponent,
-  ) {
-    if (!('start' in component)) {
-      return undefined;
-    }
-
+  public async extractEvents(calendar: DAVCalendar, component: VEvent) {
     const { summary, start, attach } = component;
 
-    if (typeof summary === 'undefined') {
+    // summary is ParameterValue: a plain string, or {val, params} when the ICS
+    // property carries parameters such as LANGUAGE.
+    if (typeof summary !== 'string') {
       return undefined;
     }
 

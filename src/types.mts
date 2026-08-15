@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { DAVCalendar } from 'tsdav';
-import * as ical from 'ical';
+import { VEvent } from 'node-ical';
 
 export type Event = {
   summary: string;
@@ -8,6 +8,9 @@ export type Event = {
   link: string;
   calendarName: string;
 };
+
+/** Inclusive window the digest covers. */
+export type TimeWindow = { from: DateTime; to: DateTime };
 
 export const CALENDAR_PROVIDERS = ['monica', 'nextcloud'] as const;
 export type CalendarProviderType = (typeof CALENDAR_PROVIDERS)[number];
@@ -18,7 +21,7 @@ export type MessengerType = (typeof MESSENGERS)[number];
 export interface CalendarProvider {
   extractEvents(
     calendar: DAVCalendar,
-    component: ical.CalendarComponent,
+    component: VEvent,
   ): Promise<Event | undefined>;
 
   formatMetadataToMarkdown(events: Event[]): string;

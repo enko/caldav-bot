@@ -3,8 +3,8 @@ import { NextcloudCalendarProvider } from '../../src/calendar-providers/nextclou
 import { DateTime } from 'luxon';
 import { Event } from '../../src/types.mjs';
 import { DAVCalendar } from 'tsdav';
-import * as ical from 'ical';
-import RRule from 'rrule';
+import type { VEvent } from 'node-ical';
+import { RRule } from 'rrule';
 
 // Mock the caldav module
 vi.mock('../../src/caldav.mjs', () => ({
@@ -173,13 +173,13 @@ describe('NextcloudCalendarProvider', () => {
     });
 
     it('should extract event data correctly', async () => {
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('2024-01-15T14:30:00'),
         summary: 'Team Meeting',
         location: 'https://meet.example.com/room123',
         status: 'CONFIRMED',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -197,7 +197,7 @@ describe('NextcloudCalendarProvider', () => {
         type: 'VEVENT',
         summary: 'Meeting',
         location: 'Office',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -205,11 +205,11 @@ describe('NextcloudCalendarProvider', () => {
     });
 
     it('should return undefined if component has no summary', async () => {
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('2024-01-15T14:30:00'),
         location: 'Office',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -217,12 +217,12 @@ describe('NextcloudCalendarProvider', () => {
     });
 
     it('should return undefined if location is not a string', async () => {
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('2024-01-15T14:30:00'),
         summary: 'Meeting',
         location: undefined,
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -230,13 +230,13 @@ describe('NextcloudCalendarProvider', () => {
     });
 
     it('should return undefined if status is CANCELLED', async () => {
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('2024-01-15T14:30:00'),
         summary: 'Meeting',
         location: 'Office',
         status: 'CANCELLED',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -248,12 +248,12 @@ describe('NextcloudCalendarProvider', () => {
         url: 'https://test.com/calendar',
       } as DAVCalendar;
 
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('2024-01-15T14:30:00'),
         summary: 'Meeting',
         location: 'Office',
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(
         calendarWithoutName,
@@ -270,13 +270,13 @@ describe('NextcloudCalendarProvider', () => {
         dtstart: new Date('2024-01-01T09:00:00'),
       });
 
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('2024-01-01T09:00:00'),
         summary: 'Weekly Meeting',
         location: 'Office',
         rrule: rrule,
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -296,7 +296,7 @@ describe('NextcloudCalendarProvider', () => {
       // Mock next occurrence date
       const nextDate = DateTime.now().plus({ days: 5 });
 
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('2024-01-01T09:00:00'),
         summary: 'Weekly Meeting',
@@ -305,9 +305,9 @@ describe('NextcloudCalendarProvider', () => {
         recurrences: {
           [nextDate.toISODate()!]: {
             status: 'CANCELLED',
-          } as ical.CalendarComponent,
+          } as VEvent,
         },
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 
@@ -321,7 +321,7 @@ describe('NextcloudCalendarProvider', () => {
         dtstart: new Date('2024-01-01T09:00:00'),
       });
 
-      const component: ical.CalendarComponent = {
+      const component: VEvent = {
         type: 'VEVENT',
         start: new Date('2024-01-01T09:00:00'),
         summary: 'Weekly Meeting',
@@ -330,9 +330,9 @@ describe('NextcloudCalendarProvider', () => {
         recurrences: {
           '2024-02-01': {
             status: 'CANCELLED',
-          } as ical.CalendarComponent,
+          } as VEvent,
         },
-      } as ical.CalendarComponent;
+      } as VEvent;
 
       const result = await provider.extractEvents(mockCalendar, component);
 

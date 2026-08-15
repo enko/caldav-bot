@@ -1,8 +1,8 @@
-import { DAVCalendar, DAVObject, createDAVClient } from 'tsdav';
-import ical from 'ical';
-import type { RRule } from 'rrule';
+import { createDAVClient } from 'tsdav';
+import ical from 'node-ical';
+import type { RRule } from 'node-ical';
 
-import { CalendarProvider, Event } from './types.mjs';
+import { CalendarProvider, Event, TimeWindow } from './types.mjs';
 import { DateTime } from 'luxon';
 import { createLogger } from './logger.mjs';
 import { Config } from './config.mjs';
@@ -19,38 +19,6 @@ export function getNextDateFromRRule(rrule: RRule) {
   return DateTime.fromJSDate(nextDate);
 }
 
-async function extractMetadataFromCalendarObjects(
-  provider: CalendarProvider,
-  calendar: DAVCalendar,
-  calendarObjects: DAVObject[],
-) {
-  const items: Event[] = [];
-
-  for (const entry of calendarObjects) {
-    const data = entry.data;
-
-    if (typeof data === 'undefined') {
-      continue;
-    }
-
-    const calendarEntry = ical.parseICS(data);
-
-    for (const keys of Object.keys(calendarEntry)) {
-      const value = calendarEntry[keys];
-
-      const item = await provider.extractEvents(calendar, value);
-
-      if (typeof item === 'undefined') {
-        continue;
-      }
-
-      items.push(item);
-    }
-  }
-
-  return items;
-}
-
 export async function fetchEvents(config: Config, provider: CalendarProvider) {
   const client = await createDAVClient({
     serverUrl: config.caldav.baseUrl,
@@ -62,62 +30,54 @@ export async function fetchEvents(config: Config, provider: CalendarProvider) {
     defaultAccountType: 'caldav',
   });
 
-  const configuredCalendars = config.caldav.calendars;
-
   const allCalendars = await client.fetchCalendars();
+  const names = allCalendars.map((item) => item.displayName);
+  logger.debug({ calendars: names }, 'Discovered calendars');
 
-  logger.info(
-    { calendars: allCalendars.map((item) => item.displayName) },
-    'Discovered calendars',
+  const calendars = allCalendars.filter(
+    (item) =>
+      typeof item.displayName === 'string' &&
+      config.caldav.calendars.includes(item.displayName),
   );
 
-  const calendars = allCalendars.filter((item) => {
-    const displayName = item.displayName;
-
-    if (typeof displayName === 'string') {
-      return configuredCalendars.includes(displayName);
-    }
-
-    return false;
-  });
-
-  if (typeof calendars === 'undefined') {
-    throw new Error('Could not find Calendar');
+  if (calendars.length === 0) {
+    throw new Error(
+      `None of the configured calendars (${config.caldav.calendars.join(', ')}) ` +
+        `exist on the server. Available: ${names.join(', ')}`,
+    );
   }
+
+  const start = DateTime.now().startOf('day');
+  const window: TimeWindow = {
+    from: start,
+    to: start.plus({ days: config.caldav.calendarDuration }).endOf('day'),
+  };
 
   const filter = {
     timeRange: {
-      start: DateTime.now()
-        .toUTC()
-        .set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
-        .toISO(),
-      end: DateTime.now()
-        .toUTC()
-        .plus({ days: config.caldav.calendarDuration })
-        .toISO(),
+      start: window.from.toUTC().toISO(),
+      end: window.to.toUTC().toISO(),
     },
   };
-
   logger.info(filter, 'Fetching calendar items');
 
   const results: Event[] = [];
-
   for (const calendar of calendars) {
-    const calendarObjects = await client.fetchCalendarObjects({
-      calendar,
-      ...filter,
-    });
+    const objects = await client.fetchCalendarObjects({ calendar, ...filter });
+    logger.debug({ count: objects.length }, 'Received calendar objects');
 
-    logger.info({ calendarObjects }, 'Recieved calendar obects');
+    for (const entry of objects) {
+      if (typeof entry.data !== 'string') continue;
 
-    const objects = await extractMetadataFromCalendarObjects(
-      provider,
-      calendar,
-      calendarObjects,
-    );
+      for (const component of Object.values(ical.sync.parseICS(entry.data))) {
+        if (component?.type !== 'VEVENT') continue;
 
-    for (const item of objects) {
-      results.push(item);
+        const event = await provider.extractEvents(calendar, component);
+
+        if (typeof event === 'undefined') continue;
+
+        results.push(event);
+      }
     }
   }
 

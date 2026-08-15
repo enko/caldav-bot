@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { getNextDateFromRRule } from '../../src/caldav.mjs';
-import RRule from 'rrule';
+import { RRule } from 'rrule';
 import { Settings } from 'luxon';
 
 describe('getNextDateFromRRule', () => {

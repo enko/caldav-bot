@@ -1,4 +1,4 @@
-import { CalendarComponent } from 'ical';
+import { VEvent } from 'node-ical';
 import { DAVCalendar } from 'tsdav';
 import { CalendarProvider, Event } from '../types.mjs';
 import { DateTime, FixedOffsetZone } from 'luxon';
@@ -8,17 +8,12 @@ import { getNextDateFromRRule } from '../caldav.mjs';
 export class NextcloudCalendarProvider implements CalendarProvider {
   public constructor(private readonly durationInDays: number) {}
 
-  public async extractEvents(
-    calendar: DAVCalendar,
-    component: CalendarComponent,
-  ) {
-    if (!('start' in component)) {
-      return undefined;
-    }
-
+  public async extractEvents(calendar: DAVCalendar, component: VEvent) {
     const { summary, start, location, rrule, recurrences, status } = component;
 
-    if (typeof summary === 'undefined') {
+    // summary and location are ParameterValue: a plain string, or {val, params}
+    // when the ICS property carries parameters such as LANGUAGE.
+    if (typeof summary !== 'string') {
       return undefined;
     }
 
@@ -58,7 +53,7 @@ export class NextcloudCalendarProvider implements CalendarProvider {
             recurrence === date.toISODate() &&
             recurrences[recurrence].status === 'CANCELLED'
           ) {
-            return;
+            return undefined;
           }
         }
       }
