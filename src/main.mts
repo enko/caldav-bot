@@ -1,12 +1,12 @@
-import { createLogger } from './logger.mjs';
-import type { CalendarProvider, Messenger } from './types.mjs';
-import { fetchEvents } from './caldav.mjs';
-import { MonicaCalendarProvider } from './calendar-providers/monica.mjs';
-import { NextcloudCalendarProvider } from './calendar-providers/nextcloud.mjs';
-import { loadConfig } from './config.mjs';
-import type { Config } from './config.mjs';
-import { TelegramMessenger } from './messenger/telegram.mjs';
-import { MatrixMessenger } from './messenger/matrix.mjs';
+import { createLogger } from './logger.mts';
+import type { CalendarProvider, Messenger } from './types.mts';
+import { fetchEvents } from './caldav.mts';
+import { MonicaCalendarProvider } from './calendar-providers/monica.mts';
+import { NextcloudCalendarProvider } from './calendar-providers/nextcloud.mts';
+import { loadConfig } from './config.mts';
+import type { Config } from './config.mts';
+import { TelegramMessenger } from './messenger/telegram.mts';
+import { MatrixMessenger } from './messenger/matrix.mts';
 
 const logger = createLogger('main');
 

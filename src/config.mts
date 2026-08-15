@@ -1,5 +1,5 @@
 import { type } from 'arktype';
-import { CALENDAR_PROVIDERS, MESSENGERS } from './types.mjs';
+import { CALENDAR_PROVIDERS, MESSENGERS } from './types.mts';
 
 // Destructuring an `as const` tuple keeps exact literal types, so the
 // discriminant literals have a single source of truth. Tuple indices within a

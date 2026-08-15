@@ -5,8 +5,8 @@ import { visit } from 'unist-util-visit';
 import type { Root } from 'mdast';
 
 import { Telegraf } from 'telegraf';
-import type { Messenger } from '../types.mjs';
-import { createLogger } from '../logger.mjs';
+import type { Messenger } from '../types.mts';
+import { createLogger } from '../logger.mts';
 
 const logger = createLogger('telegram-messenger');
 
@@ -25,7 +25,11 @@ function escapeTelegramCharacters() {
 }
 
 export class TelegramMessenger implements Messenger {
-  public constructor(private readonly botToken: string) {}
+  private readonly botToken: string;
+
+  public constructor(botToken: string) {
+    this.botToken = botToken;
+  }
 
   private async sanitizeMarkdown(text: string) {
     const safe = await unified()

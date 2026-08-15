@@ -1,11 +1,15 @@
 import type { DAVCalendar } from 'tsdav';
 import type { VEvent } from 'node-ical';
-import { isValidDate } from '../types.mjs';
-import type { CalendarProvider, Event } from '../types.mjs';
+import { isValidDate } from '../types.mts';
+import type { CalendarProvider, Event } from '../types.mts';
 import { DateTime } from 'luxon';
 
 export class MonicaCalendarProvider implements CalendarProvider {
-  public constructor(private readonly durationInDays: number) {}
+  private readonly durationInDays: number;
+
+  public constructor(durationInDays: number) {
+    this.durationInDays = durationInDays;
+  }
 
   /**
    * Birthdays are not expanded into the digest window: their DTSTART carries the

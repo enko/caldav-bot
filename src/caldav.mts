@@ -1,10 +1,10 @@
 import { createDAVClient } from 'tsdav';
 import ical from 'node-ical';
 
-import type { CalendarProvider, Event, TimeWindow } from './types.mjs';
+import type { CalendarProvider, Event, TimeWindow } from './types.mts';
 import { DateTime } from 'luxon';
-import { createLogger } from './logger.mjs';
-import type { Config } from './config.mjs';
+import { createLogger } from './logger.mts';
+import type { Config } from './config.mts';
 
 const logger = createLogger('caldav');
 

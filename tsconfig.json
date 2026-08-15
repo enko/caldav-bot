@@ -9,6 +9,11 @@
     "noUnusedParameters": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
+    "erasableSyntaxOnly": true,
+    // Sources import each other as ./x.mts so `node src/main.mts` resolves them;
+    // tsc rewrites those specifiers to ./x.mjs in the emitted output.
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "target": "es2024",
     "lib": ["es2024"],
     "module": "nodenext",

@@ -9,8 +9,8 @@ import {
   SimpleFsStorageProvider,
 } from 'matrix-bot-sdk';
 import type { RustSdkCryptoStoreType } from 'matrix-bot-sdk';
-import type { Messenger } from '../types.mjs';
-import { createLogger } from '../logger.mjs';
+import type { Messenger } from '../types.mts';
+import { createLogger } from '../logger.mts';
 
 const logger = createLogger('matrix-messenger');
 const ACCESS_TOKEN_KEY = 'caldav-bot/accessToken';
@@ -29,7 +29,11 @@ export type MatrixMessengerOptions = {
 };
 
 export class MatrixMessenger implements Messenger {
-  public constructor(private readonly options: MatrixMessengerOptions) {}
+  private readonly options: MatrixMessengerOptions;
+
+  public constructor(options: MatrixMessengerOptions) {
+    this.options = options;
+  }
 
   private async connect(): Promise<MatrixClient> {
     const storage = new SimpleFsStorageProvider(this.options.settingsFile);

@@ -1,12 +1,16 @@
 import ical from 'node-ical';
 import type { VEvent } from 'node-ical';
 import type { DAVCalendar } from 'tsdav';
-import { isValidDate } from '../types.mjs';
-import type { CalendarProvider, Event, TimeWindow } from '../types.mjs';
+import { isValidDate } from '../types.mts';
+import type { CalendarProvider, Event, TimeWindow } from '../types.mts';
 import { DateTime } from 'luxon';
 
 export class NextcloudCalendarProvider implements CalendarProvider {
-  public constructor(private readonly durationInDays: number) {}
+  private readonly durationInDays: number;
+
+  public constructor(durationInDays: number) {
+    this.durationInDays = durationInDays;
+  }
 
   public extractEvents(
     calendar: DAVCalendar,
