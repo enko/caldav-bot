@@ -5,7 +5,7 @@ import { visit } from 'unist-util-visit';
 import type { Root } from 'mdast';
 
 import { Telegraf } from 'telegraf';
-import { Messenger } from '../types.mjs';
+import type { Messenger } from '../types.mjs';
 
 function escapeTelegramCharacters() {
   return function (tree: Root) {

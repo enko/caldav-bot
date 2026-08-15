@@ -1,5 +1,5 @@
 import { unified } from 'unified';
-import { Messenger } from '../types.mjs';
+import type { Messenger } from '../types.mjs';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
@@ -22,11 +22,9 @@ export type MatrixMessengerOptions = {
 };
 
 export class MatrixMessenger implements Messenger {
-  public client: MatrixClient;
-
   public constructor(private readonly options: MatrixMessengerOptions) {}
 
-  private async initCrypto() {
+  private async initCrypto(): Promise<MatrixClient> {
     const storageProvider = new SimpleFsStorageProvider(
       this.options.settingsFile,
     ); // or any other IStorageProvider
@@ -36,24 +34,26 @@ export class MatrixMessenger implements Messenger {
 
     const auth = new MatrixAuth(this.options.homeServerUrl);
 
-    const client = await auth.passwordLogin(
+    const session = await auth.passwordLogin(
       this.options.userId,
       this.options.userPassword,
       'caldav-bot',
     );
 
-    this.client = new MatrixClient(
+    const client = new MatrixClient(
       this.options.homeServerUrl,
-      client.accessToken,
+      session.accessToken,
       storageProvider,
       cryptoProvider,
     );
 
-    await this.client.start({ initialSyncLimit: 1 });
+    await client.start({ initialSyncLimit: 1 });
+
+    return client;
   }
 
   public async sendMessage(channel: string, message: string): Promise<unknown> {
-    await this.initCrypto();
+    const client = await this.initCrypto();
 
     const safe = await unified()
       .use(remarkParse)
@@ -61,7 +61,7 @@ export class MatrixMessenger implements Messenger {
       .use(rehypeStringify)
       .process(message);
 
-    const result = await this.client.sendEvent(channel, 'm.room.message', {
+    const result = await client.sendEvent(channel, 'm.room.message', {
       msgtype: 'm.text',
       body: message,
       format: 'org.matrix.custom.html',

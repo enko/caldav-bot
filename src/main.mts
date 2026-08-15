@@ -1,10 +1,11 @@
 import 'dotenv/config';
 import { createLogger } from './logger.mjs';
-import { CalendarProvider, Messenger } from './types.mjs';
+import type { CalendarProvider, Messenger } from './types.mjs';
 import { fetchEvents } from './caldav.mjs';
 import { MonicaCalendarProvider } from './calendar-providers/monica.mjs';
 import { NextcloudCalendarProvider } from './calendar-providers/nextcloud.mjs';
-import { Config, loadConfig } from './config.mjs';
+import { loadConfig } from './config.mjs';
+import type { Config } from './config.mjs';
 import { TelegramMessenger } from './messenger/telegram.mjs';
 import { MatrixMessenger } from './messenger/matrix.mjs';
 
@@ -21,16 +22,30 @@ function createCalendarProvider(config: Config): CalendarProvider {
 
 function createMessenger(config: Config): Messenger {
   switch (config.messenger) {
-    case 'telegram':
-      return new TelegramMessenger(config.telegram.botToken);
-    case 'matrix':
+    case 'telegram': {
+      const telegram = config.telegram;
+
+      if (!telegram) {
+        throw new Error('MESSENGER=telegram but no Telegram config was loaded');
+      }
+
+      return new TelegramMessenger(telegram.botToken);
+    }
+    case 'matrix': {
+      const matrix = config.matrix;
+
+      if (!matrix) {
+        throw new Error('MESSENGER=matrix but no Matrix config was loaded');
+      }
+
       return new MatrixMessenger({
-        homeServerUrl: config.matrix.homeServerUrl,
-        userId: config.matrix.userId,
-        userPassword: config.matrix.userPassword,
-        settingsFile: config.matrix.settingsFile,
-        cryptoDirectory: config.matrix.cryptoDirectory,
+        homeServerUrl: matrix.homeServerUrl,
+        userId: matrix.userId,
+        userPassword: matrix.userPassword,
+        settingsFile: matrix.settingsFile,
+        cryptoDirectory: matrix.cryptoDirectory,
       });
+    }
   }
 }
 

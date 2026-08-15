@@ -10,11 +10,24 @@ export default defineConfig([
   {
     name: 'app/source',
     files: ['src/**/*.mts'],
-    // Type-aware rules need strictNullChecks to work correctly, so they are
-    // switched on together with `strict` rather than here.
-    extends: [js.configs.recommended, tseslint.configs.recommended],
-    languageOptions: { globals: globals.nodeBuiltin },
-    rules: { 'no-console': 'error' },
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommendedTypeChecked,
+      tseslint.configs.stylisticTypeChecked,
+    ],
+    languageOptions: {
+      globals: globals.nodeBuiltin,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      'no-console': 'error',
+      // `type` for data shapes, `interface` for contracts classes implement.
+      // The rule cannot express that split, so it is off rather than half-wrong.
+      '@typescript-eslint/consistent-type-definitions': 'off',
+    },
   },
 
   {

@@ -1,9 +1,5 @@
-import {
-  CALENDAR_PROVIDERS,
-  CalendarProviderType,
-  MESSENGERS,
-  MessengerType,
-} from './types.mjs';
+import { CALENDAR_PROVIDERS, MESSENGERS } from './types.mjs';
+import type { CalendarProviderType, MessengerType } from './types.mjs';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import appRoot from 'app-root-path';
@@ -197,9 +193,11 @@ class CalDavConfig {
 }
 
 export class Config {
-  public telegram: TelegramConfig;
+  // Only the branch matching MESSENGER is populated; the schema-based rewrite
+  // replaces these with a discriminated union.
+  public telegram?: TelegramConfig;
 
-  public matrix: MatrixConfig;
+  public matrix?: MatrixConfig;
 
   public caldav: CalDavConfig;
 

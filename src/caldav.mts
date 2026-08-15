@@ -20,7 +20,10 @@ export async function fetchEvents(config: Config, provider: CalendarProvider) {
   });
 
   const allCalendars = await client.fetchCalendars();
-  const names = allCalendars.map((item) => item.displayName);
+  // tsdav types displayName as string | Record<string, unknown> | undefined.
+  const names = allCalendars
+    .map((item) => item.displayName)
+    .filter((name): name is string => typeof name === 'string');
   logger.debug({ calendars: names }, 'Discovered calendars');
 
   const calendars = allCalendars.filter(
