@@ -2,16 +2,9 @@ import { DAVCalendar, DAVObject, createDAVClient } from 'tsdav';
 import ical from 'ical';
 import type { RRule } from 'rrule';
 
-import {
-  CalendarProvider,
-  CalendarProviderSymbol,
-  CalendarProviderType,
-  Event,
-} from './types.mjs';
+import { CalendarProvider, Event } from './types.mjs';
 import { DateTime } from 'luxon';
 import { createLogger } from './logger.mjs';
-import lodash from 'lodash';
-import { Container } from '@freshgum/typedi';
 import { Config } from './config.mjs';
 
 const logger = createLogger('caldav');
@@ -27,14 +20,11 @@ export function getNextDateFromRRule(rrule: RRule) {
 }
 
 async function extractMetadataFromCalendarObjects(
+  provider: CalendarProvider,
   calendar: DAVCalendar,
   calendarObjects: DAVObject[],
 ) {
   const items: Event[] = [];
-
-  const provider = Container.get<CalendarProvider>(
-    CalendarProviderSymbol.toString(),
-  );
 
   for (const entry of calendarObjects) {
     const data = entry.data;
@@ -48,10 +38,7 @@ async function extractMetadataFromCalendarObjects(
     for (const keys of Object.keys(calendarEntry)) {
       const value = calendarEntry[keys];
 
-      const item = await provider.extractmetaDataFromCalendarObject(
-        calendar,
-        value,
-      );
+      const item = await provider.extractEvents(calendar, value);
 
       if (typeof item === 'undefined') {
         continue;
@@ -64,9 +51,7 @@ async function extractMetadataFromCalendarObjects(
   return items;
 }
 
-export async function getEventsFromCalendar(durationInDays: number) {
-  const config = Container.get<Config>(Config);
-
+export async function fetchEvents(config: Config, provider: CalendarProvider) {
   const client = await createDAVClient({
     serverUrl: config.caldav.baseUrl,
     credentials: {
@@ -106,7 +91,10 @@ export async function getEventsFromCalendar(durationInDays: number) {
         .toUTC()
         .set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
         .toISO(),
-      end: DateTime.now().toUTC().plus({ days: durationInDays }).toISO(),
+      end: DateTime.now()
+        .toUTC()
+        .plus({ days: config.caldav.calendarDuration })
+        .toISO(),
     },
   };
 
@@ -123,6 +111,7 @@ export async function getEventsFromCalendar(durationInDays: number) {
     logger.info({ calendarObjects }, 'Recieved calendar obects');
 
     const objects = await extractMetadataFromCalendarObjects(
+      provider,
       calendar,
       calendarObjects,
     );
@@ -132,11 +121,5 @@ export async function getEventsFromCalendar(durationInDays: number) {
     }
   }
 
-  if (CalendarProviderSymbol.toString() === CalendarProviderType.Monika) {
-    return lodash.sortBy(results, (item) =>
-      item.date.set({ year: DateTime.now().year }).toISODate(),
-    );
-  } else {
-    return lodash.sortBy(results, (item) => item.date.toISODate());
-  }
+  return results;
 }

@@ -3,20 +3,13 @@ import { MonicaCalendarProvider } from '../../src/calendar-providers/monica.mjs'
 import { DateTime } from 'luxon';
 import { Event } from '../../src/types.mjs';
 import { DAVCalendar } from 'tsdav';
-import type { Config } from '../../src/config.mjs';
 import * as ical from 'ical';
 
 describe('MonicaCalendarProvider', () => {
   let provider: MonicaCalendarProvider;
-  let mockConfig: Config;
 
   beforeEach(() => {
-    mockConfig = {
-      caldav: {
-        calendarDuration: 30,
-      },
-    } as unknown as Config;
-    provider = new MonicaCalendarProvider(mockConfig);
+    provider = new MonicaCalendarProvider(30);
   });
 
   describe('formatMetadataToMarkdown', () => {
@@ -168,7 +161,7 @@ describe('MonicaCalendarProvider', () => {
     });
   });
 
-  describe('extractmetaDataFromCalendarObject', () => {
+  describe('extractEvents', () => {
     let mockCalendar: DAVCalendar;
 
     beforeEach(() => {
@@ -186,10 +179,7 @@ describe('MonicaCalendarProvider', () => {
         attach: 'https://monica.test/contact/1',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeDefined();
       expect(result?.summary).toBe('John Doe');
@@ -208,10 +198,7 @@ describe('MonicaCalendarProvider', () => {
         attach: 'https://monica.test/contact/2',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result?.summary).toBe('Jane Smith');
     });
@@ -224,10 +211,7 @@ describe('MonicaCalendarProvider', () => {
         attach: 'https://monica.test/contact/3',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result?.summary).toBe('Max Mustermann');
     });
@@ -239,10 +223,7 @@ describe('MonicaCalendarProvider', () => {
         attach: 'https://monica.test/contact/1',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeUndefined();
     });
@@ -254,10 +235,7 @@ describe('MonicaCalendarProvider', () => {
         attach: 'https://monica.test/contact/1',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeUndefined();
     });
@@ -270,10 +248,7 @@ describe('MonicaCalendarProvider', () => {
         attach: undefined,
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeUndefined();
     });
@@ -290,7 +265,7 @@ describe('MonicaCalendarProvider', () => {
         attach: 'https://monica.test/contact/1',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
+      const result = await provider.extractEvents(
         calendarWithoutName,
         component,
       );

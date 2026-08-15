@@ -1,5 +1,9 @@
-import { Service } from '@freshgum/typedi';
-import { CalendarProviderType, MessengerType } from './types.mjs';
+import {
+  CALENDAR_PROVIDERS,
+  CalendarProviderType,
+  MESSENGERS,
+  MessengerType,
+} from './types.mjs';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import appRoot from 'app-root-path';
@@ -168,9 +172,8 @@ class CalDavConfig {
     }
 
     if (
-      Object.values(CalendarProviderType).includes(
-        calendarProvider as CalendarProviderType,
-      ) === false
+      CALENDAR_PROVIDERS.includes(calendarProvider as CalendarProviderType) ===
+      false
     ) {
       throw new Error(`Unknown calendar provider: ${calendarProvider}`);
     }
@@ -193,7 +196,6 @@ class CalDavConfig {
   }
 }
 
-@Service([])
 export class Config {
   public telegram: TelegramConfig;
 
@@ -222,19 +224,20 @@ export class Config {
       throw new Error('MESSENGER is not set');
     }
 
-    if (
-      Object.values(MessengerType).includes(messenger as MessengerType) ===
-      false
-    ) {
+    if (MESSENGERS.includes(messenger as MessengerType) === false) {
       throw new Error(`Unknown messenger: ${messenger}`);
     }
 
     this.messenger = messenger as MessengerType;
 
-    if (this.messenger === MessengerType.Telegram) {
+    if (this.messenger === 'telegram') {
       this.telegram = new TelegramConfig();
-    } else if (this.messenger === MessengerType.Matrix) {
+    } else if (this.messenger === 'matrix') {
       this.matrix = new MatrixConfig();
     }
   }
+}
+
+export function loadConfig(): Config {
+  return new Config();
 }

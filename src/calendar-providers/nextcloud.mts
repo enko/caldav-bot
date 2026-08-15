@@ -3,15 +3,12 @@ import { DAVCalendar } from 'tsdav';
 import { CalendarProvider, Event } from '../types.mjs';
 import { DateTime, FixedOffsetZone } from 'luxon';
 import lodash from 'lodash';
-import { Service } from '@freshgum/typedi';
-import { Config } from '../config.mjs';
 import { getNextDateFromRRule } from '../caldav.mjs';
 
-@Service([Config])
 export class NextcloudCalendarProvider implements CalendarProvider {
-  public constructor(private config: Config) {}
+  public constructor(private readonly durationInDays: number) {}
 
-  public async extractmetaDataFromCalendarObject(
+  public async extractEvents(
     calendar: DAVCalendar,
     component: CalendarComponent,
   ) {
@@ -68,13 +65,15 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       calendarName,
     };
   }
+
   public formatMetadataToMarkdown(events: Event[]) {
     if (events.length === 0) {
-      return `Keine Termine in den nächsten ${this.config.caldav.calendarDuration} Tagen gefunden.`;
+      return `Keine Termine in den nächsten ${this.durationInDays} Tagen gefunden.`;
     }
 
-    const groupdEvents = lodash.groupBy(events, (item) =>
-      item.date.toISODate(),
+    const groupdEvents = lodash.groupBy(
+      lodash.sortBy(events, (item) => item.date.toISODate()),
+      (item) => item.date.toISODate(),
     );
 
     const formatItem = (item: Event) => {
@@ -90,7 +89,7 @@ export class NextcloudCalendarProvider implements CalendarProvider {
       }
     };
 
-    let output = `🥳 Die nächsten ${this.config.caldav.calendarDuration} Tage 🥳`;
+    let output = `🥳 Die nächsten ${this.durationInDays} Tage 🥳`;
 
     output += '\n\n';
 

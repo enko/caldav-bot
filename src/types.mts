@@ -9,28 +9,20 @@ export type Event = {
   calendarName: string;
 };
 
-export enum CalendarProviderType {
-  Nextcloud = 'nextcloud',
-  Monika = 'monika',
-}
+export const CALENDAR_PROVIDERS = ['monica', 'nextcloud'] as const;
+export type CalendarProviderType = (typeof CALENDAR_PROVIDERS)[number];
 
-export const CalendarProviderSymbol = Symbol('CalendarProvider');
+export const MESSENGERS = ['telegram', 'matrix'] as const;
+export type MessengerType = (typeof MESSENGERS)[number];
 
 export interface CalendarProvider {
-  extractmetaDataFromCalendarObject(
+  extractEvents(
     calendar: DAVCalendar,
     component: ical.CalendarComponent,
   ): Promise<Event | undefined>;
 
   formatMetadataToMarkdown(events: Event[]): string;
 }
-
-export enum MessengerType {
-  Telegram = 'telegram',
-  Matrix = 'matrix',
-}
-
-export const MessageSymbol = Symbol('Messenger');
 
 export interface Messenger {
   sendMessage(channel: string, message: string): Promise<unknown>;

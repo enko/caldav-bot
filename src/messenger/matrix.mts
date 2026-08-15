@@ -4,8 +4,6 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
 import Olm from '@matrix-org/olm';
-import { Config } from '../config.mjs';
-import { Service } from '@freshgum/typedi';
 import {
   MatrixAuth,
   RustSdkCryptoStorageProvider,
@@ -15,30 +13,37 @@ import { MatrixClient } from 'matrix-bot-sdk';
 
 global.Olm = Olm;
 
-@Service([Config])
+export type MatrixMessengerOptions = {
+  homeServerUrl: string;
+  userId: string;
+  userPassword: string;
+  settingsFile: string;
+  cryptoDirectory: string;
+};
+
 export class MatrixMessenger implements Messenger {
   public client: MatrixClient;
 
-  public constructor(private config: Config) {}
+  public constructor(private readonly options: MatrixMessengerOptions) {}
 
   private async initCrypto() {
     const storageProvider = new SimpleFsStorageProvider(
-      this.config.matrix.settingsFile,
+      this.options.settingsFile,
     ); // or any other IStorageProvider
     const cryptoProvider = new RustSdkCryptoStorageProvider(
-      this.config.matrix.cryptoDirectory,
+      this.options.cryptoDirectory,
     );
 
-    const auth = new MatrixAuth(this.config.matrix.homeServerUrl);
+    const auth = new MatrixAuth(this.options.homeServerUrl);
 
     const client = await auth.passwordLogin(
-      this.config.matrix.userId,
-      this.config.matrix.userPassword,
+      this.options.userId,
+      this.options.userPassword,
       'caldav-bot',
     );
 
     this.client = new MatrixClient(
-      this.config.matrix.homeServerUrl,
+      this.options.homeServerUrl,
       client.accessToken,
       storageProvider,
       cryptoProvider,

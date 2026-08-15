@@ -1,87 +1,52 @@
-import 'reflect-metadata';
 import 'dotenv/config';
 import { createLogger } from './logger.mjs';
-import {
-  CalendarProvider,
-  CalendarProviderSymbol,
-  CalendarProviderType,
-  Messenger,
-  MessageSymbol,
-  MessengerType,
-} from './types.mjs';
-import { getEventsFromCalendar } from './caldav.mjs';
+import { CalendarProvider, Messenger } from './types.mjs';
+import { fetchEvents } from './caldav.mjs';
 import { MonicaCalendarProvider } from './calendar-providers/monica.mjs';
-import { Container } from '@freshgum/typedi';
 import { NextcloudCalendarProvider } from './calendar-providers/nextcloud.mjs';
-import { Config } from './config.mjs';
+import { Config, loadConfig } from './config.mjs';
 import { TelegramMessenger } from './messenger/telegram.mjs';
 import { MatrixMessenger } from './messenger/matrix.mjs';
 
 const logger = createLogger('main');
 
-function configureCalendarProvider() {
-  const config = Container.get(Config);
-
-  const provider = config.caldav.calendarProvider;
-
-  if (provider === CalendarProviderType.Monika) {
-    const provider = Container.get(MonicaCalendarProvider);
-    Container.set<CalendarProvider>({
-      id: CalendarProviderSymbol.toString(),
-      value: provider,
-    });
-  } else if (provider === CalendarProviderType.Nextcloud) {
-    const provider = Container.get(NextcloudCalendarProvider);
-    Container.set({
-      id: CalendarProviderSymbol.toString(),
-      value: provider,
-    });
-  } else {
-    throw new Error('Unknown Calendar Provider');
+function createCalendarProvider(config: Config): CalendarProvider {
+  switch (config.caldav.calendarProvider) {
+    case 'monica':
+      return new MonicaCalendarProvider(config.caldav.calendarDuration);
+    case 'nextcloud':
+      return new NextcloudCalendarProvider(config.caldav.calendarDuration);
   }
 }
 
-function configureMessenger() {
-  const config = Container.get(Config);
-
-  const messenger = config.messenger;
-
-  if (messenger === MessengerType.Telegram) {
-    const provider = Container.get(TelegramMessenger);
-    Container.set({
-      id: MessageSymbol.toString(),
-      value: provider,
-    });
-  } else if (messenger === MessengerType.Matrix) {
-    const provider = Container.get(MatrixMessenger);
-    Container.set({
-      id: MessageSymbol.toString(),
-      value: provider,
-    });
-  } else {
-    throw new Error('Unknown Messenger');
+function createMessenger(config: Config): Messenger {
+  switch (config.messenger) {
+    case 'telegram':
+      return new TelegramMessenger(config.telegram.botToken);
+    case 'matrix':
+      return new MatrixMessenger({
+        homeServerUrl: config.matrix.homeServerUrl,
+        userId: config.matrix.userId,
+        userPassword: config.matrix.userPassword,
+        settingsFile: config.matrix.settingsFile,
+        cryptoDirectory: config.matrix.cryptoDirectory,
+      });
   }
 }
 
 async function main() {
   logger.info('Welcome to the caldav telegram bot 👋');
 
-  const config = Container.get<Config>(Config);
+  const config = loadConfig();
 
-  configureCalendarProvider();
-  configureMessenger();
+  const provider = createCalendarProvider(config);
+  const messenger = createMessenger(config);
 
-  const calendarDuration = config.caldav.calendarDuration;
-
-  const events = await getEventsFromCalendar(calendarDuration);
+  const events = await fetchEvents(config, provider);
 
   logger.info({ events }, 'Recieved events');
 
-  const markdown = Container.get<CalendarProvider>(
-    CalendarProviderSymbol.toString(),
-  ).formatMetadataToMarkdown(events);
-
-  const messenger = Container.get<Messenger>(MessageSymbol.toString());
+  const markdown = provider.formatMetadataToMarkdown(events);
 
   const results = await messenger.sendMessage(config.channelId, markdown);
 

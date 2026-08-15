@@ -3,7 +3,6 @@ import { NextcloudCalendarProvider } from '../../src/calendar-providers/nextclou
 import { DateTime } from 'luxon';
 import { Event } from '../../src/types.mjs';
 import { DAVCalendar } from 'tsdav';
-import type { Config } from '../../src/config.mjs';
 import * as ical from 'ical';
 import RRule from 'rrule';
 
@@ -17,15 +16,9 @@ vi.mock('../../src/caldav.mjs', () => ({
 
 describe('NextcloudCalendarProvider', () => {
   let provider: NextcloudCalendarProvider;
-  let mockConfig: Config;
 
   beforeEach(() => {
-    mockConfig = {
-      caldav: {
-        calendarDuration: 30,
-      },
-    } as unknown as Config;
-    provider = new NextcloudCalendarProvider(mockConfig);
+    provider = new NextcloudCalendarProvider(30);
   });
 
   describe('formatMetadataToMarkdown', () => {
@@ -169,7 +162,7 @@ describe('NextcloudCalendarProvider', () => {
     });
   });
 
-  describe('extractmetaDataFromCalendarObject', () => {
+  describe('extractEvents', () => {
     let mockCalendar: DAVCalendar;
 
     beforeEach(() => {
@@ -188,10 +181,7 @@ describe('NextcloudCalendarProvider', () => {
         status: 'CONFIRMED',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeDefined();
       expect(result?.summary).toBe('Team Meeting');
@@ -209,10 +199,7 @@ describe('NextcloudCalendarProvider', () => {
         location: 'Office',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeUndefined();
     });
@@ -224,10 +211,7 @@ describe('NextcloudCalendarProvider', () => {
         location: 'Office',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeUndefined();
     });
@@ -240,10 +224,7 @@ describe('NextcloudCalendarProvider', () => {
         location: undefined,
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeUndefined();
     });
@@ -257,10 +238,7 @@ describe('NextcloudCalendarProvider', () => {
         status: 'CANCELLED',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeUndefined();
     });
@@ -277,7 +255,7 @@ describe('NextcloudCalendarProvider', () => {
         location: 'Office',
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
+      const result = await provider.extractEvents(
         calendarWithoutName,
         component,
       );
@@ -300,10 +278,7 @@ describe('NextcloudCalendarProvider', () => {
         rrule: rrule,
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeDefined();
       expect(result?.summary).toBe('Weekly Meeting');
@@ -334,10 +309,7 @@ describe('NextcloudCalendarProvider', () => {
         },
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeUndefined();
     });
@@ -362,10 +334,7 @@ describe('NextcloudCalendarProvider', () => {
         },
       } as ical.CalendarComponent;
 
-      const result = await provider.extractmetaDataFromCalendarObject(
-        mockCalendar,
-        component,
-      );
+      const result = await provider.extractEvents(mockCalendar, component);
 
       expect(result).toBeDefined();
       expect(result?.summary).toBe('Weekly Meeting');
