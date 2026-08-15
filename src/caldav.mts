@@ -10,10 +10,10 @@ const logger = createLogger('caldav');
 
 export async function fetchEvents(config: Config, provider: CalendarProvider) {
   const client = await createDAVClient({
-    serverUrl: config.caldav.baseUrl,
+    serverUrl: config.CALDAV_BASE_URL,
     credentials: {
-      username: config.caldav.userName,
-      password: config.caldav.userPassword,
+      username: config.CALDAV_USER_NAME,
+      password: config.CALDAV_USER_PASSWORD,
     },
     authMethod: 'Basic',
     defaultAccountType: 'caldav',
@@ -29,12 +29,12 @@ export async function fetchEvents(config: Config, provider: CalendarProvider) {
   const calendars = allCalendars.filter(
     (item) =>
       typeof item.displayName === 'string' &&
-      config.caldav.calendars.includes(item.displayName),
+      config.CALDAV_CALENDARS.includes(item.displayName),
   );
 
   if (calendars.length === 0) {
     throw new Error(
-      `None of the configured calendars (${config.caldav.calendars.join(', ')}) ` +
+      `None of the configured calendars (${config.CALDAV_CALENDARS.join(', ')}) ` +
         `exist on the server. Available: ${names.join(', ')}`,
     );
   }
@@ -42,7 +42,7 @@ export async function fetchEvents(config: Config, provider: CalendarProvider) {
   const start = DateTime.now().startOf('day');
   const window: TimeWindow = {
     from: start,
-    to: start.plus({ days: config.caldav.calendarDuration }).endOf('day'),
+    to: start.plus({ days: config.CALENDAR_DURATION }).endOf('day'),
   };
 
   const filter = {

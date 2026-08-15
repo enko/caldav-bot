@@ -12,40 +12,28 @@ import { MatrixMessenger } from './messenger/matrix.mjs';
 const logger = createLogger('main');
 
 function createCalendarProvider(config: Config): CalendarProvider {
-  switch (config.caldav.calendarProvider) {
+  switch (config.CALDAV_CALENDAR_PROVIDER) {
     case 'monica':
-      return new MonicaCalendarProvider(config.caldav.calendarDuration);
+      return new MonicaCalendarProvider(config.CALENDAR_DURATION);
     case 'nextcloud':
-      return new NextcloudCalendarProvider(config.caldav.calendarDuration);
+      return new NextcloudCalendarProvider(config.CALENDAR_DURATION);
   }
 }
 
 function createMessenger(config: Config): Messenger {
-  switch (config.messenger) {
-    case 'telegram': {
-      const telegram = config.telegram;
-
-      if (!telegram) {
-        throw new Error('MESSENGER=telegram but no Telegram config was loaded');
-      }
-
-      return new TelegramMessenger(telegram.botToken);
-    }
-    case 'matrix': {
-      const matrix = config.matrix;
-
-      if (!matrix) {
-        throw new Error('MESSENGER=matrix but no Matrix config was loaded');
-      }
-
+  // The config type is a union discriminated on MESSENGER, so each branch has
+  // exactly the keys that messenger needs and nothing else.
+  switch (config.MESSENGER) {
+    case 'telegram':
+      return new TelegramMessenger(config.TELEGRAM_BOT_TOKEN);
+    case 'matrix':
       return new MatrixMessenger({
-        homeServerUrl: matrix.homeServerUrl,
-        userId: matrix.userId,
-        userPassword: matrix.userPassword,
-        settingsFile: matrix.settingsFile,
-        cryptoDirectory: matrix.cryptoDirectory,
+        homeServerUrl: config.MATRIX_HOME_SERVER_URL,
+        userId: config.MATRIX_USER_ID,
+        userPassword: config.MATRIX_USER_PASSWORD,
+        settingsFile: config.MATRIX_SETTINGS_FILE,
+        cryptoDirectory: config.MATRIX_CRYPTO_DIRECTORY,
       });
-    }
   }
 }
 
@@ -63,7 +51,7 @@ async function main() {
 
   const markdown = provider.formatMetadataToMarkdown(events);
 
-  const results = await messenger.sendMessage(config.channelId, markdown);
+  const results = await messenger.sendMessage(config.CHANNEL_ID, markdown);
 
   logger.info({ results }, 'Sent a message');
 

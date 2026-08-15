@@ -1,241 +1,78 @@
+import { type } from 'arktype';
 import { CALENDAR_PROVIDERS, MESSENGERS } from './types.mjs';
-import type { CalendarProviderType, MessengerType } from './types.mjs';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import appRoot from 'app-root-path';
 
-class TelegramConfig {
-  public botName: string;
+// Destructuring an `as const` tuple keeps exact literal types, so the
+// discriminant literals have a single source of truth. Tuple indices within a
+// known length are unaffected by `noUncheckedIndexedAccess`.
+const [TELEGRAM, MATRIX] = MESSENGERS;
 
-  public botToken: string;
+/** `" A |B| "` -> `["A", "B"]`. Rejects a list that trims away to nothing. */
+const CalendarNames = type('string')
+  .pipe((raw) =>
+    raw
+      .split('|')
+      .map((name) => name.trim())
+      .filter((name) => name !== ''),
+  )
+  .to('string[] > 0');
 
-  public constructor() {
-    const botName = process.env.TELEGRAM_BOT_NAME;
+/** `"14"` -> `14`. */
+const CalendarDuration = type('string.integer.parse').to('number.integer > 0');
 
-    if (typeof botName !== 'string') {
-      throw new Error('TELEGRAM_BOT_NAME is not set');
-    }
+/** The seven keys both messengers need. */
+const SharedConfig = type({
+  CHANNEL_ID: 'string > 0',
+  CALDAV_BASE_URL: 'string.url',
+  CALDAV_USER_NAME: 'string > 0',
+  CALDAV_USER_PASSWORD: 'string > 0',
+  CALDAV_CALENDAR_PROVIDER: type.enumerated(...CALENDAR_PROVIDERS),
+  CALDAV_CALENDARS: CalendarNames,
+  // The default is an *input* value (a string): arktype types defaults against
+  // `inferIn` and pipes them through the morph once, at construction. Passing
+  // the number 14 is a compile error.
+  CALENDAR_DURATION: CalendarDuration.default('14'),
+});
 
-    this.botName = botName;
+// arktype auto-discriminates on the MESSENGER literal, and `.infer` distributes
+// over the branches, so `config.MESSENGER === 'telegram'` narrows in TypeScript.
+// `'...'` must be the first key. `'+': 'delete'` keeps arktype's default
+// tolerance for undeclared keys (PATH, HOME, ...) while stripping them from the
+// result, so the returned object is exactly the declared shape rather than a
+// clone of the whole environment.
+const ConfigSchema = type({
+  '...': SharedConfig,
+  '+': 'delete',
+  MESSENGER: type.unit(TELEGRAM),
+  TELEGRAM_BOT_TOKEN: 'string > 0',
+}).or({
+  '...': SharedConfig,
+  '+': 'delete',
+  MESSENGER: type.unit(MATRIX),
+  MATRIX_HOME_SERVER_URL: 'string.url',
+  MATRIX_USER_ID: type('/^@/').describe("a Matrix user ID starting with '@'"),
+  MATRIX_USER_PASSWORD: 'string > 0',
+  MATRIX_SETTINGS_FILE: 'string > 0',
+  MATRIX_CRYPTO_DIRECTORY: 'string > 0',
+});
 
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+export type Config = typeof ConfigSchema.infer;
 
-    if (typeof botToken !== 'string') {
-      throw new Error('TELEGRAM_BOT_TOKEN is not set');
-    }
+export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+  // A discriminated union compiles to a `switch` on MESSENGER, so a bad
+  // discriminant collapses the whole result into one error at that path and
+  // hides every other problem. Check it first so the message names the real
+  // mistake instead of blaming the six keys the wrong branch wanted.
+  const messenger = type.enumerated(...MESSENGERS)(env.MESSENGER);
 
-    this.botToken = botToken;
+  if (messenger instanceof type.errors) {
+    throw new Error(`MESSENGER must be one of: ${MESSENGERS.join(', ')}`);
   }
-}
 
-class MatrixConfig {
-  public homeServerUrl: string;
+  const result = ConfigSchema(env);
 
-  public userId: string;
-
-  public userPassword: string;
-
-  public settingsFile: string;
-
-  public cryptoDirectory: string;
-
-  public constructor() {
-    const homeServerUrl = process.env.MATRIX_HOME_SERVER_URL;
-
-    if (typeof homeServerUrl !== 'string') {
-      throw new Error('MATRIX_HOME_SERVER_URL is not set');
-    }
-
-    this.homeServerUrl = homeServerUrl;
-
-    const userId = process.env.MATRIX_USER_ID;
-
-    if (typeof userId !== 'string') {
-      throw new Error('MATRIX_USER_ID is not set');
-    }
-
-    this.userId = userId;
-
-    const userPassword = process.env.MATRIX_USER_PASSWORD;
-
-    if (typeof userPassword !== 'string') {
-      throw new Error('MATRIX_USER_PASSWORD is not set');
-    }
-
-    this.userPassword = userPassword;
-
-    const settingsFile = process.env.MATRIX_SETTINGS_FILE;
-
-    if (typeof settingsFile !== 'string') {
-      throw new Error('MATRIX_SETTINGS_FILE is not set');
-    }
-
-    let fullSettingsFile: string;
-
-    if (settingsFile.startsWith('/')) {
-      fullSettingsFile = settingsFile;
-    } else {
-      fullSettingsFile = path.resolve(appRoot.path, settingsFile);
-    }
-
-    try {
-      fs.accessSync(fullSettingsFile, fs.constants.R_OK);
-    } catch (error: unknown) {
-      throw new Error(`Can't access settings file at ${fullSettingsFile}`, {
-        cause: error,
-      });
-    }
-
-    this.settingsFile = fullSettingsFile;
-
-    const cryptoDirectory = process.env.MATRIX_CRYPTO_DIRECTORY;
-
-    if (typeof cryptoDirectory !== 'string') {
-      throw new Error('MATRIX_CRYPTO_DIRECTORY is not set');
-    }
-
-    let fullCryptoDirectory: string;
-
-    if (cryptoDirectory.startsWith('/')) {
-      fullCryptoDirectory = cryptoDirectory;
-    } else {
-      fullCryptoDirectory = path.resolve(appRoot.path, cryptoDirectory);
-    }
-
-    try {
-      fs.accessSync(fullCryptoDirectory, fs.constants.R_OK | fs.constants.X_OK);
-    } catch (error: unknown) {
-      throw new Error(
-        `Can't access crypto directory at ${fullCryptoDirectory}`,
-        { cause: error },
-      );
-    }
-
-    this.cryptoDirectory = fullCryptoDirectory;
+  if (result instanceof type.errors) {
+    throw new Error(`Invalid configuration:\n${result.summary}`);
   }
-}
 
-class CalDavConfig {
-  public baseUrl: string;
-
-  public calendars: string[];
-
-  public userName: string;
-
-  public userPassword: string;
-
-  public calendarDuration: number;
-
-  public calendarProvider: CalendarProviderType;
-
-  public constructor() {
-    const baseUrl = process.env.CALDAV_BASE_URL;
-
-    if (typeof baseUrl !== 'string') {
-      throw new Error('CALDAV_BASE_URL is not set');
-    }
-
-    this.baseUrl = baseUrl;
-
-    const calendars = process.env.CALDAV_CALENDARS;
-
-    if (typeof calendars !== 'string') {
-      throw new Error('CALDAV_CALENDARS is not set');
-    }
-
-    this.calendars = calendars.split('|');
-
-    const userName = process.env.CALDAV_USER_NAME;
-
-    if (typeof userName !== 'string') {
-      throw new Error('CALDAV_USER_NAME is not set');
-    }
-
-    this.userName = userName;
-
-    const userPassword = process.env.CALDAV_USER_PASSWORD;
-
-    if (typeof userPassword !== 'string') {
-      throw new Error('CALDAV_USER_PASSWORD is not set');
-    }
-
-    this.userPassword = userPassword;
-
-    const calendarProvider = process.env.CALDAV_CALENDAR_PROVIDER;
-
-    if (typeof calendarProvider !== 'string') {
-      throw new Error('CALDAV_CALENDAR_PROVIDER is not set');
-    }
-
-    if (
-      CALENDAR_PROVIDERS.includes(calendarProvider as CalendarProviderType) ===
-      false
-    ) {
-      throw new Error(`Unknown calendar provider: ${calendarProvider}`);
-    }
-
-    this.calendarProvider = calendarProvider as CalendarProviderType;
-
-    const calendarDuration = process.env.CALENDAR_DURATION;
-
-    if (typeof calendarDuration !== 'string') {
-      throw new Error('CALENDAR_DURATION is not set');
-    }
-
-    const duration = Number.parseInt(calendarDuration);
-
-    if (Number.isNaN(duration)) {
-      throw new Error('CALENDAR_DURATION is not a number');
-    }
-
-    this.calendarDuration = duration;
-  }
-}
-
-export class Config {
-  // Only the branch matching MESSENGER is populated; the schema-based rewrite
-  // replaces these with a discriminated union.
-  public telegram?: TelegramConfig;
-
-  public matrix?: MatrixConfig;
-
-  public caldav: CalDavConfig;
-
-  public messenger: MessengerType;
-
-  public channelId: string;
-
-  constructor() {
-    this.caldav = new CalDavConfig();
-
-    const channelId = process.env.CHANNEL_ID;
-
-    if (typeof channelId !== 'string') {
-      throw new Error('CHANNEL_ID is not set');
-    }
-
-    this.channelId = channelId;
-
-    const messenger = process.env.MESSENGER;
-
-    if (typeof messenger !== 'string') {
-      throw new Error('MESSENGER is not set');
-    }
-
-    if (MESSENGERS.includes(messenger as MessengerType) === false) {
-      throw new Error(`Unknown messenger: ${messenger}`);
-    }
-
-    this.messenger = messenger as MessengerType;
-
-    if (this.messenger === 'telegram') {
-      this.telegram = new TelegramConfig();
-    } else if (this.messenger === 'matrix') {
-      this.matrix = new MatrixConfig();
-    }
-  }
-}
-
-export function loadConfig(): Config {
-  return new Config();
+  return result;
 }
