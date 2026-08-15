@@ -51,11 +51,17 @@ async function main() {
 
   const markdown = provider.formatMetadataToMarkdown(events);
 
-  const results = await messenger.sendMessage(config.CHANNEL_ID, markdown);
+  await messenger.sendMessage(config.CHANNEL_ID, markdown);
 
-  logger.info({ results }, 'Sent a message');
-
-  process.exit(0);
+  logger.info('Sent digest');
 }
 
-void main();
+try {
+  await main();
+} catch (error) {
+  logger.error({ err: error }, 'Fatal error, digest not sent');
+  // Not process.exit(): let the event loop drain so nothing in flight is cut
+  // off. Safe now that the Matrix client no longer holds a /sync long-poll
+  // open and the log destination is synchronous.
+  process.exitCode = 1;
+}
