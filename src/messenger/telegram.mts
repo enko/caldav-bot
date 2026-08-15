@@ -6,6 +6,9 @@ import type { Root } from 'mdast';
 
 import { Telegraf } from 'telegraf';
 import type { Messenger } from '../types.mjs';
+import { createLogger } from '../logger.mjs';
+
+const logger = createLogger('telegram-messenger');
 
 function escapeTelegramCharacters() {
   return function (tree: Root) {
@@ -37,7 +40,9 @@ export class TelegramMessenger implements Messenger {
   public async sendMessage(channel: string, message: string) {
     const bot = new Telegraf(this.botToken);
 
-    return bot.telegram.sendMessage(
+    logger.info({ channel }, 'Sending message to Telegram');
+
+    const result = await bot.telegram.sendMessage(
       channel,
       await this.sanitizeMarkdown(message),
       {
@@ -45,5 +50,9 @@ export class TelegramMessenger implements Messenger {
         link_preview_options: { is_disabled: true },
       },
     );
+
+    logger.info({ messageId: result.message_id }, 'Message sent');
+
+    return result;
   }
 }
