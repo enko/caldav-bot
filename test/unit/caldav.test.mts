@@ -101,7 +101,7 @@ describe('getNextDateFromRRule', () => {
     expect(result?.toISODate()).toBe('2024-01-16');
   });
 
-  it('should return invalid DateTime when rrule has ended', () => {
+  it('should return undefined when rrule has ended', () => {
     const rrule = new RRule({
       freq: RRule.DAILY,
       until: new Date('2024-01-10T23:59:59Z'), // Ended before "now"
@@ -110,12 +110,11 @@ describe('getNextDateFromRRule', () => {
 
     const result = getNextDateFromRRule(rrule);
 
-    // When rrule.after() returns null, DateTime.fromJSDate(null) creates an invalid DateTime
-    expect(result).toBeDefined();
-    expect(result?.isValid).toBe(false);
+    // rrule.after() returns null for an exhausted rule; there is no next date.
+    expect(result).toBeUndefined();
   });
 
-  it('should return invalid DateTime when count limit is exceeded', () => {
+  it('should return undefined when count limit is exceeded', () => {
     const rrule = new RRule({
       freq: RRule.DAILY,
       count: 3, // Only 3 occurrences: Jan 1, 2, 3
@@ -124,9 +123,7 @@ describe('getNextDateFromRRule', () => {
 
     const result = getNextDateFromRRule(rrule);
 
-    // When rrule.after() returns null, DateTime.fromJSDate(null) creates an invalid DateTime
-    expect(result).toBeDefined();
-    expect(result?.isValid).toBe(false);
+    expect(result).toBeUndefined();
   });
 
   it('should handle complex recurrence rule (every other week)', () => {

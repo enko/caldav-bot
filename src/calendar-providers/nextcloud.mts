@@ -43,8 +43,14 @@ export class NextcloudCalendarProvider implements CalendarProvider {
     let date = DateTime.fromJSDate(start);
 
     if (typeof rrule !== 'undefined') {
+      const next = getNextDateFromRRule(rrule);
+
+      if (!next) {
+        return undefined;
+      }
+
       const offset = FixedOffsetZone.instance(date.offset);
-      date = getNextDateFromRRule(rrule).setZone(offset);
+      date = next.setZone(offset);
 
       if (typeof recurrences !== 'undefined') {
         for (const recurrence of Object.keys(recurrences)) {

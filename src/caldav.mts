@@ -12,7 +12,7 @@ const logger = createLogger('caldav');
 export function getNextDateFromRRule(rrule: RRule) {
   const nextDate = rrule.after(DateTime.now().toJSDate(), true);
 
-  if (typeof nextDate === 'undefined') {
+  if (!nextDate) {
     return undefined;
   }
 
