@@ -1,69 +1,52 @@
-import { VEvent } from 'node-ical';
-import { DAVCalendar } from 'tsdav';
-import { CalendarProvider, Event } from '../types.mjs';
-import { DateTime, FixedOffsetZone } from 'luxon';
-import { getNextDateFromRRule } from '../caldav.mjs';
+import ical from 'node-ical';
+import type { VEvent } from 'node-ical';
+import type { DAVCalendar } from 'tsdav';
+import { isValidDate } from '../types.mjs';
+import type { CalendarProvider, Event, TimeWindow } from '../types.mjs';
+import { DateTime } from 'luxon';
 
 export class NextcloudCalendarProvider implements CalendarProvider {
   public constructor(private readonly durationInDays: number) {}
 
-  public async extractEvents(calendar: DAVCalendar, component: VEvent) {
-    const { summary, start, location, rrule, recurrences, status } = component;
+  public extractEvents(
+    calendar: DAVCalendar,
+    component: VEvent,
+    window: TimeWindow,
+  ): Event[] {
+    // tsdav types displayName as string | Record<string, unknown> | undefined.
+    const calendarName =
+      typeof calendar.displayName === 'string' ? calendar.displayName : '';
+    const events: Event[] = [];
 
-    // summary and location are ParameterValue: a plain string, or {val, params}
-    // when the ICS property carries parameters such as LANGUAGE.
-    if (typeof summary !== 'string') {
-      return undefined;
+    const instances = ical.expandRecurringEvent(component, {
+      from: window.from.toJSDate(),
+      to: window.to.toJSDate(),
+      includeOverrides: true,
+      excludeExdates: true,
+    });
+
+    for (const instance of instances) {
+      // For an override instance this is the override's VEVENT, so status and
+      // location come from the moved occurrence, not the series master.
+      const source = instance.event;
+      if (source.status === 'CANCELLED') continue;
+
+      // summary/location are ParameterValue (`string | {val, params}`) whenever
+      // the ICS property carries parameters such as LANGUAGE. The expansion
+      // substitutes '' for a missing SUMMARY, which is not a digest entry.
+      const summary = instance.summary;
+      if (typeof summary !== 'string' || summary.length === 0) continue;
+
+      const location = source.location;
+      if (typeof location !== 'string') continue;
+
+      const date = DateTime.fromJSDate(instance.start);
+      if (!isValidDate(date)) continue;
+
+      events.push({ summary, date, link: location, calendarName });
     }
 
-    if (typeof start === 'undefined') {
-      return undefined;
-    }
-
-    if (typeof location !== 'string') {
-      return undefined;
-    }
-
-    if (status === 'CANCELLED') {
-      return undefined;
-    }
-
-    let calendarName = calendar.displayName;
-
-    if (typeof calendarName !== 'string') {
-      calendarName = '';
-    }
-
-    let date = DateTime.fromJSDate(start);
-
-    if (typeof rrule !== 'undefined') {
-      const next = getNextDateFromRRule(rrule);
-
-      if (!next) {
-        return undefined;
-      }
-
-      const offset = FixedOffsetZone.instance(date.offset);
-      date = next.setZone(offset);
-
-      if (typeof recurrences !== 'undefined') {
-        for (const recurrence of Object.keys(recurrences)) {
-          if (
-            recurrence === date.toISODate() &&
-            recurrences[recurrence].status === 'CANCELLED'
-          ) {
-            return undefined;
-          }
-        }
-      }
-    }
-
-    return {
-      summary,
-      date,
-      link: location,
-      calendarName,
-    };
+    return events;
   }
 
   public formatMetadataToMarkdown(events: Event[]) {

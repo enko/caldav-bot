@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MonicaCalendarProvider } from '../../src/calendar-providers/monica.mjs';
 import { DateTime } from 'luxon';
-import { Event } from '../../src/types.mjs';
-import { DAVCalendar } from 'tsdav';
+import type { Event } from '../../src/types.mjs';
+import type { DAVCalendar } from 'tsdav';
 import type { VEvent } from 'node-ical';
 
 describe('MonicaCalendarProvider', () => {
@@ -42,7 +42,7 @@ describe('MonicaCalendarProvider', () => {
       expect(result).toContain('John Doe');
       expect(result).toContain('in 5 Tagen');
       expect(result).toMatch(/wird \d+ in 5 Tagen/);
-      expect(result).toContain('[Monika](https://monica.test/contact/1)');
+      expect(result).toContain('[Monica](https://monica.test/contact/1)');
     });
 
     it('should calculate age correctly', () => {
@@ -171,106 +171,74 @@ describe('MonicaCalendarProvider', () => {
       } as DAVCalendar;
     });
 
-    it('should extract birthday data correctly', async () => {
-      const component: VEvent = {
+    const birthday = (overrides: Record<string, unknown>) =>
+      ({
         type: 'VEVENT',
         start: new Date('1990-05-15'),
         summary: 'Birthday of John Doe',
         attach: 'https://monica.test/contact/1',
-      } as VEvent;
+        ...overrides,
+      }) as unknown as VEvent;
 
-      const result = await provider.extractEvents(mockCalendar, component);
+    it('should extract birthday data correctly', () => {
+      const [event, ...rest] = provider.extractEvents(
+        mockCalendar,
+        birthday({}),
+      );
 
-      expect(result).toBeDefined();
-      expect(result?.summary).toBe('John Doe');
-      expect(result?.date.year).toBe(1990);
-      expect(result?.date.month).toBe(5);
-      expect(result?.date.day).toBe(15);
-      expect(result?.link).toBe('https://monica.test/contact/1');
-      expect(result?.calendarName).toBe('Test Calendar');
+      expect(rest).toHaveLength(0);
+      expect(event?.summary).toBe('John Doe');
+      expect(event?.date.year).toBe(1990);
+      expect(event?.date.month).toBe(5);
+      expect(event?.date.day).toBe(15);
+      expect(event?.link).toBe('https://monica.test/contact/1');
+      expect(event?.calendarName).toBe('Test Calendar');
     });
 
-    it('should remove "Birthday of " prefix from summary', async () => {
-      const component: VEvent = {
-        type: 'VEVENT',
-        start: new Date('1990-05-15'),
-        summary: 'Birthday of Jane Smith',
-        attach: 'https://monica.test/contact/2',
-      } as VEvent;
+    it('should remove "Birthday of " prefix from summary', () => {
+      const [event] = provider.extractEvents(
+        mockCalendar,
+        birthday({ summary: 'Birthday of Jane Smith' }),
+      );
 
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result?.summary).toBe('Jane Smith');
+      expect(event?.summary).toBe('Jane Smith');
     });
 
-    it('should remove "Geburtstag von " prefix from summary', async () => {
-      const component: VEvent = {
-        type: 'VEVENT',
-        start: new Date('1990-05-15'),
-        summary: 'Geburtstag von Max Mustermann',
-        attach: 'https://monica.test/contact/3',
-      } as VEvent;
+    it('should remove "Geburtstag von " prefix from summary', () => {
+      const [event] = provider.extractEvents(
+        mockCalendar,
+        birthday({ summary: 'Geburtstag von Max Mustermann' }),
+      );
 
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result?.summary).toBe('Max Mustermann');
+      expect(event?.summary).toBe('Max Mustermann');
     });
 
-    it('should return undefined if component has no start date', async () => {
-      const component = {
-        type: 'VEVENT',
-        summary: 'Birthday of John Doe',
-        attach: 'https://monica.test/contact/1',
-      } as VEvent;
-
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result).toBeUndefined();
+    it('should return nothing if component has no start date', () => {
+      expect(
+        provider.extractEvents(mockCalendar, birthday({ start: undefined })),
+      ).toEqual([]);
     });
 
-    it('should return undefined if component has no summary', async () => {
-      const component: VEvent = {
-        type: 'VEVENT',
-        start: new Date('1990-05-15'),
-        attach: 'https://monica.test/contact/1',
-      } as VEvent;
-
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result).toBeUndefined();
+    it('should return nothing if component has no summary', () => {
+      expect(
+        provider.extractEvents(mockCalendar, birthday({ summary: undefined })),
+      ).toEqual([]);
     });
 
-    it('should return undefined if attach is not a string', async () => {
-      const component: VEvent = {
-        type: 'VEVENT',
-        start: new Date('1990-05-15'),
-        summary: 'Birthday of John Doe',
-        attach: undefined,
-      } as VEvent;
-
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result).toBeUndefined();
+    it('should return nothing if attach is not a string', () => {
+      expect(
+        provider.extractEvents(mockCalendar, birthday({ attach: undefined })),
+      ).toEqual([]);
     });
 
-    it('should handle calendar without displayName', async () => {
+    it('should handle calendar without displayName', () => {
       const calendarWithoutName = {
         url: 'https://test.com/calendar',
       } as DAVCalendar;
 
-      const component: VEvent = {
-        type: 'VEVENT',
-        start: new Date('1990-05-15'),
-        summary: 'Birthday of John Doe',
-        attach: 'https://monica.test/contact/1',
-      } as VEvent;
+      const [event] = provider.extractEvents(calendarWithoutName, birthday({}));
 
-      const result = await provider.extractEvents(
-        calendarWithoutName,
-        component,
-      );
-
-      expect(result?.calendarName).toBe('');
+      expect(event?.calendarName).toBe('');
     });
   });
 });

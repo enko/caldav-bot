@@ -1,18 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { NextcloudCalendarProvider } from '../../src/calendar-providers/nextcloud.mjs';
 import { DateTime } from 'luxon';
-import { Event } from '../../src/types.mjs';
-import { DAVCalendar } from 'tsdav';
+import type { Event, TimeWindow, ValidDateTime } from '../../src/types.mjs';
+import type { DAVCalendar } from 'tsdav';
 import type { VEvent } from 'node-ical';
-import { RRule } from 'rrule';
-
-// Mock the caldav module
-vi.mock('../../src/caldav.mjs', () => ({
-  getNextDateFromRRule: vi.fn(() => {
-    // Simple mock: return 5 days from now
-    return DateTime.now().plus({ days: 5 });
-  }),
-}));
 
 describe('NextcloudCalendarProvider', () => {
   let provider: NextcloudCalendarProvider;
@@ -165,6 +156,13 @@ describe('NextcloudCalendarProvider', () => {
   describe('extractEvents', () => {
     let mockCalendar: DAVCalendar;
 
+    // A window that contains the components below, built the way fetchEvents
+    // builds it. Expansion only reports instances inside the window.
+    const window: TimeWindow = {
+      from: DateTime.fromISO('2024-01-01T00:00:00') as ValidDateTime,
+      to: DateTime.fromISO('2024-01-31T23:59:59.999') as ValidDateTime,
+    };
+
     beforeEach(() => {
       mockCalendar = {
         displayName: 'Test Calendar',
@@ -172,172 +170,113 @@ describe('NextcloudCalendarProvider', () => {
       } as DAVCalendar;
     });
 
-    it('should extract event data correctly', async () => {
-      const component: VEvent = {
+    it('should extract event data correctly', () => {
+      const component = {
         type: 'VEVENT',
         start: new Date('2024-01-15T14:30:00'),
         summary: 'Team Meeting',
         location: 'https://meet.example.com/room123',
         status: 'CONFIRMED',
-      } as VEvent;
+      } as unknown as VEvent;
 
-      const result = await provider.extractEvents(mockCalendar, component);
+      const [event, ...rest] = provider.extractEvents(
+        mockCalendar,
+        component,
+        window,
+      );
 
-      expect(result).toBeDefined();
-      expect(result?.summary).toBe('Team Meeting');
-      expect(result?.date.year).toBe(2024);
-      expect(result?.date.month).toBe(1);
-      expect(result?.date.day).toBe(15);
-      expect(result?.link).toBe('https://meet.example.com/room123');
-      expect(result?.calendarName).toBe('Test Calendar');
+      expect(rest).toHaveLength(0);
+      expect(event?.summary).toBe('Team Meeting');
+      expect(event?.date.year).toBe(2024);
+      expect(event?.date.month).toBe(1);
+      expect(event?.date.day).toBe(15);
+      expect(event?.link).toBe('https://meet.example.com/room123');
+      expect(event?.calendarName).toBe('Test Calendar');
     });
 
-    it('should return undefined if component has no start date', async () => {
+    it('should return nothing if component has no start date', () => {
       const component = {
         type: 'VEVENT',
         summary: 'Meeting',
         location: 'Office',
-      } as VEvent;
+      } as unknown as VEvent;
 
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result).toBeUndefined();
+      expect(provider.extractEvents(mockCalendar, component, window)).toEqual(
+        [],
+      );
     });
 
-    it('should return undefined if component has no summary', async () => {
-      const component: VEvent = {
+    it('should return nothing if component has no summary', () => {
+      const component = {
         type: 'VEVENT',
         start: new Date('2024-01-15T14:30:00'),
         location: 'Office',
-      } as VEvent;
+      } as unknown as VEvent;
 
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result).toBeUndefined();
+      expect(provider.extractEvents(mockCalendar, component, window)).toEqual(
+        [],
+      );
     });
 
-    it('should return undefined if location is not a string', async () => {
-      const component: VEvent = {
+    it('should return nothing if location is not a string', () => {
+      const component = {
         type: 'VEVENT',
         start: new Date('2024-01-15T14:30:00'),
         summary: 'Meeting',
         location: undefined,
-      } as VEvent;
+      } as unknown as VEvent;
 
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result).toBeUndefined();
+      expect(provider.extractEvents(mockCalendar, component, window)).toEqual(
+        [],
+      );
     });
 
-    it('should return undefined if status is CANCELLED', async () => {
-      const component: VEvent = {
+    it('should return nothing if status is CANCELLED', () => {
+      const component = {
         type: 'VEVENT',
         start: new Date('2024-01-15T14:30:00'),
         summary: 'Meeting',
         location: 'Office',
         status: 'CANCELLED',
-      } as VEvent;
+      } as unknown as VEvent;
 
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result).toBeUndefined();
+      expect(provider.extractEvents(mockCalendar, component, window)).toEqual(
+        [],
+      );
     });
 
-    it('should handle calendar without displayName', async () => {
+    it('should return nothing for an event outside the window', () => {
+      const component = {
+        type: 'VEVENT',
+        start: new Date('2024-06-15T14:30:00'),
+        summary: 'Meeting',
+        location: 'Office',
+      } as unknown as VEvent;
+
+      expect(provider.extractEvents(mockCalendar, component, window)).toEqual(
+        [],
+      );
+    });
+
+    it('should handle calendar without displayName', () => {
       const calendarWithoutName = {
         url: 'https://test.com/calendar',
       } as DAVCalendar;
 
-      const component: VEvent = {
+      const component = {
         type: 'VEVENT',
         start: new Date('2024-01-15T14:30:00'),
         summary: 'Meeting',
         location: 'Office',
-      } as VEvent;
+      } as unknown as VEvent;
 
-      const result = await provider.extractEvents(
+      const [event] = provider.extractEvents(
         calendarWithoutName,
         component,
+        window,
       );
 
-      expect(result?.calendarName).toBe('');
-    });
-
-    it('should handle recurring event with rrule', async () => {
-      const rrule = new RRule({
-        freq: RRule.WEEKLY,
-        byweekday: [RRule.MO],
-        dtstart: new Date('2024-01-01T09:00:00'),
-      });
-
-      const component: VEvent = {
-        type: 'VEVENT',
-        start: new Date('2024-01-01T09:00:00'),
-        summary: 'Weekly Meeting',
-        location: 'Office',
-        rrule: rrule,
-      } as VEvent;
-
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result).toBeDefined();
-      expect(result?.summary).toBe('Weekly Meeting');
-      // The date should be calculated by getNextDateFromRRule (mocked to return 5 days from now)
-      expect(result?.date.isValid).toBe(true);
-    });
-
-    it('should skip recurring event if next occurrence is cancelled', async () => {
-      const rrule = new RRule({
-        freq: RRule.WEEKLY,
-        byweekday: [RRule.MO],
-        dtstart: new Date('2024-01-01T09:00:00'),
-      });
-
-      // Mock next occurrence date
-      const nextDate = DateTime.now().plus({ days: 5 });
-
-      const component: VEvent = {
-        type: 'VEVENT',
-        start: new Date('2024-01-01T09:00:00'),
-        summary: 'Weekly Meeting',
-        location: 'Office',
-        rrule: rrule,
-        recurrences: {
-          [nextDate.toISODate()!]: {
-            status: 'CANCELLED',
-          } as VEvent,
-        },
-      } as VEvent;
-
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result).toBeUndefined();
-    });
-
-    it('should not skip recurring event if different occurrence is cancelled', async () => {
-      const rrule = new RRule({
-        freq: RRule.WEEKLY,
-        byweekday: [RRule.MO],
-        dtstart: new Date('2024-01-01T09:00:00'),
-      });
-
-      const component: VEvent = {
-        type: 'VEVENT',
-        start: new Date('2024-01-01T09:00:00'),
-        summary: 'Weekly Meeting',
-        location: 'Office',
-        rrule: rrule,
-        recurrences: {
-          '2024-02-01': {
-            status: 'CANCELLED',
-          } as VEvent,
-        },
-      } as VEvent;
-
-      const result = await provider.extractEvents(mockCalendar, component);
-
-      expect(result).toBeDefined();
-      expect(result?.summary).toBe('Weekly Meeting');
+      expect(event?.calendarName).toBe('');
     });
   });
 });

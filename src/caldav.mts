@@ -1,23 +1,12 @@
 import { createDAVClient } from 'tsdav';
 import ical from 'node-ical';
-import type { RRule } from 'node-ical';
 
-import { CalendarProvider, Event, TimeWindow } from './types.mjs';
+import type { CalendarProvider, Event, TimeWindow } from './types.mjs';
 import { DateTime } from 'luxon';
 import { createLogger } from './logger.mjs';
-import { Config } from './config.mjs';
+import type { Config } from './config.mjs';
 
 const logger = createLogger('caldav');
-
-export function getNextDateFromRRule(rrule: RRule) {
-  const nextDate = rrule.after(DateTime.now().toJSDate(), true);
-
-  if (!nextDate) {
-    return undefined;
-  }
-
-  return DateTime.fromJSDate(nextDate);
-}
 
 export async function fetchEvents(config: Config, provider: CalendarProvider) {
   const client = await createDAVClient({
@@ -72,11 +61,7 @@ export async function fetchEvents(config: Config, provider: CalendarProvider) {
       for (const component of Object.values(ical.sync.parseICS(entry.data))) {
         if (component?.type !== 'VEVENT') continue;
 
-        const event = await provider.extractEvents(calendar, component);
-
-        if (typeof event === 'undefined') continue;
-
-        results.push(event);
+        results.push(...provider.extractEvents(calendar, component, window));
       }
     }
   }

@@ -1,47 +1,60 @@
-import { DAVCalendar } from 'tsdav';
-import { VEvent } from 'node-ical';
-import { CalendarProvider, Event } from '../types.mjs';
+import type { DAVCalendar } from 'tsdav';
+import type { VEvent } from 'node-ical';
+import { isValidDate } from '../types.mjs';
+import type { CalendarProvider, Event } from '../types.mjs';
 import { DateTime } from 'luxon';
 
 export class MonicaCalendarProvider implements CalendarProvider {
   public constructor(private readonly durationInDays: number) {}
 
-  public async extractEvents(calendar: DAVCalendar, component: VEvent) {
+  /**
+   * Birthdays are not expanded into the digest window: their DTSTART carries the
+   * birth *year*, which the age arithmetic in formatMetadataToMarkdown needs.
+   * Hence no `window` parameter - the server-side time range already selected
+   * the components we are handed.
+   */
+  public extractEvents(calendar: DAVCalendar, component: VEvent): Event[] {
     const { summary, start, attach } = component;
 
     // summary is ParameterValue: a plain string, or {val, params} when the ICS
     // property carries parameters such as LANGUAGE.
     if (typeof summary !== 'string') {
-      return undefined;
+      return [];
     }
 
     if (typeof start === 'undefined') {
-      return undefined;
+      return [];
     }
 
     if (typeof attach !== 'string') {
-      return undefined;
+      return [];
     }
 
-    let calendarName = calendar.displayName;
+    const date = DateTime.fromJSDate(start);
 
-    if (typeof calendarName !== 'string') {
-      calendarName = '';
+    if (!isValidDate(date)) {
+      return [];
     }
 
-    return {
-      summary: summary
-        .replace('Birthday of ', '')
-        .replace('Geburtstag von ', ''),
-      date: DateTime.fromJSDate(start),
-      link: attach,
-      calendarName,
-    };
+    // tsdav types displayName as string | Record<string, unknown> | undefined.
+    const calendarName =
+      typeof calendar.displayName === 'string' ? calendar.displayName : '';
+
+    return [
+      {
+        summary: summary
+          .replace('Birthday of ', '')
+          .replace('Geburtstag von ', ''),
+        date,
+        link: attach,
+        calendarName,
+      },
+    ];
   }
 
   public formatMetadataToMarkdown(events: Event[]) {
     if (events.length === 0) {
-      return `Keine Geburtstage in Monika in den nächsten ${this.durationInDays} Tagen!`;
+      return `Keine Geburtstage in Monica in den nächsten ${this.durationInDays} Tagen!`;
     }
 
     const year = DateTime.now().year;
@@ -55,19 +68,15 @@ export class MonicaCalendarProvider implements CalendarProvider {
     );
 
     const formatItem = (item: Event) => {
-      const age = item.date
-        .set({ year: DateTime.now().year })
-        .diff(item.date, 'years').years;
+      const age = item.date.set({ year }).diff(item.date, 'years').years;
 
       const days = Math.ceil(
-        item.date
-          .set({ year: DateTime.now().year })
-          .diff(DateTime.now(), 'days').days,
+        item.date.set({ year }).diff(DateTime.now(), 'days').days,
       );
 
       const name = item.summary;
 
-      return `📅 ${name} wird ${age} in ${days} Tagen ([Monika](${item.link}))`;
+      return `📅 ${name} wird ${age} in ${days} Tagen ([Monica](${item.link}))`;
     };
 
     let output = `🥳 Die nächsten ${this.durationInDays} Tage 🥳`;
