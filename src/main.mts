@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { createLogger } from './logger.mjs';
 import type { CalendarProvider, Messenger } from './types.mjs';
 import { fetchEvents } from './caldav.mjs';
