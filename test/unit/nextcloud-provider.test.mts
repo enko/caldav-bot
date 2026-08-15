@@ -3,12 +3,13 @@ import { NextcloudCalendarProvider } from '../../src/calendar-providers/nextclou
 import { DateTime } from 'luxon';
 import { Event } from '../../src/types.mjs';
 import { DAVCalendar } from 'tsdav';
+import type { Config } from '../../src/config.mjs';
 import * as ical from 'ical';
 import RRule from 'rrule';
 
 // Mock the caldav module
 vi.mock('../../src/caldav.mjs', () => ({
-  getNextDateFromRRule: vi.fn((rrule: RRule) => {
+  getNextDateFromRRule: vi.fn(() => {
     // Simple mock: return 5 days from now
     return DateTime.now().plus({ days: 5 });
   }),
@@ -16,14 +17,14 @@ vi.mock('../../src/caldav.mjs', () => ({
 
 describe('NextcloudCalendarProvider', () => {
   let provider: NextcloudCalendarProvider;
-  let mockConfig: any;
+  let mockConfig: Config;
 
   beforeEach(() => {
     mockConfig = {
       caldav: {
         calendarDuration: 30,
       },
-    };
+    } as unknown as Config;
     provider = new NextcloudCalendarProvider(mockConfig);
   });
 
@@ -48,7 +49,9 @@ describe('NextcloudCalendarProvider', () => {
 
       expect(result).toContain('Team Meeting');
       expect(result).toContain('14:30');
-      expect(result).toContain('[Treffpunkt](https://meet.example.com/room123)');
+      expect(result).toContain(
+        '[Treffpunkt](https://meet.example.com/room123)',
+      );
       expect(result).toContain('(Work)');
     });
 

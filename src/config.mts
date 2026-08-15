@@ -81,7 +81,9 @@ class MatrixConfig {
     try {
       fs.accessSync(fullSettingsFile, fs.constants.R_OK);
     } catch (error: unknown) {
-      throw new Error(`Can't access settings file at ${fullSettingsFile}`);
+      throw new Error(`Can't access settings file at ${fullSettingsFile}`, {
+        cause: error,
+      });
     }
 
     this.settingsFile = fullSettingsFile;
@@ -105,6 +107,7 @@ class MatrixConfig {
     } catch (error: unknown) {
       throw new Error(
         `Can't access crypto directory at ${fullCryptoDirectory}`,
+        { cause: error },
       );
     }
 

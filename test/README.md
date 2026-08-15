@@ -32,6 +32,7 @@ npm run test:ui
 ## Test Framework
 
 The project uses [Vitest](https://vitest.dev/) for testing:
+
 - Native ESM support
 - TypeScript support out of the box
 - Fast execution with watch mode
@@ -41,14 +42,17 @@ The project uses [Vitest](https://vitest.dev/) for testing:
 ## Current Test Coverage
 
 ### High Coverage (>95%)
+
 - `MonicaCalendarProvider` - Birthday formatting and extraction logic
 - `NextcloudCalendarProvider` - Event formatting and extraction logic
 
 ### Partial Coverage (~10%)
+
 - `caldav.mts` - Only `getNextDateFromRRule()` tested
 - `config.mts` - Not tested (configuration loading)
 
 ### Not Tested
+
 - `main.mts` - Application entry point
 - `messenger/` - Telegram and Matrix integrations
 - `logger.mts` - Simple logging setup
@@ -58,7 +62,9 @@ The project uses [Vitest](https://vitest.dev/) for testing:
 ### Unit Tests
 
 #### `monica-provider.test.mts` (13 tests)
+
 Tests for Monica CRM birthday calendar provider:
+
 - Birthday metadata extraction from ICS components
 - Markdown formatting with age calculation
 - Date grouping and sorting
@@ -66,7 +72,9 @@ Tests for Monica CRM birthday calendar provider:
 - Edge cases (missing fields, invalid data)
 
 #### `nextcloud-provider.test.mts` (16 tests)
+
 Tests for Nextcloud calendar event provider:
+
 - Event metadata extraction from ICS components
 - Recurring event handling with RRule
 - Cancelled event detection
@@ -74,7 +82,9 @@ Tests for Nextcloud calendar event provider:
 - Time formatting (HH:mm)
 
 #### `caldav.test.mts` (12 tests)
+
 Tests for CalDAV utility functions:
+
 - `getNextDateFromRRule()` - RRule date calculation
 - Daily, weekly, monthly, yearly recurrences
 - Birthday recurrence patterns
@@ -114,21 +124,24 @@ describe('YourClass', () => {
 ### Mocking Dependencies
 
 #### Mocking TypeDI Container
+
 ```typescript
 const mockConfig = {
-  caldav: { calendarDuration: 30 }
+  caldav: { calendarDuration: 30 },
 };
 const provider = new MonicaCalendarProvider(mockConfig as any);
 ```
 
 #### Mocking Modules
+
 ```typescript
 vi.mock('../../src/caldav.mjs', () => ({
-  getNextDateFromRRule: vi.fn(() => DateTime.now().plus({ days: 5 }))
+  getNextDateFromRRule: vi.fn(() => DateTime.now().plus({ days: 5 })),
 }));
 ```
 
 #### Freezing Time
+
 ```typescript
 import { Settings } from 'luxon';
 
@@ -144,12 +157,14 @@ afterEach(() => {
 ## Future Test Additions
 
 ### Priority Areas
+
 1. Integration tests for `extractMetadataFromCalendarObjects()`
 2. End-to-end tests with mocked CalDAV server
 3. Messenger formatting tests (Telegram MarkdownV2 escaping)
 4. Configuration validation tests
 
 ### Lower Priority
+
 - Snapshot tests for markdown output
 - Performance benchmarks for large calendars
 - Error handling and logging tests
@@ -173,12 +188,15 @@ To add tests to your CI pipeline:
 ## Troubleshooting
 
 ### Tests fail with ESM errors
+
 Ensure `"type": "module"` is set in `package.json` and all imports use `.mjs` extensions.
 
 ### DateTime tests fail inconsistently
+
 Make sure to freeze time in tests using Luxon's `Settings.now` to avoid timezone issues.
 
 ### Coverage not generated
+
 Check that `@vitest/coverage-v8` is installed and `vitest.config.mts` is properly configured.
 
 ## Resources

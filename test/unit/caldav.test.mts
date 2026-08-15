@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { getNextDateFromRRule } from '../../src/caldav.mjs';
 import RRule from 'rrule';
-import { DateTime, Settings } from 'luxon';
+import { Settings } from 'luxon';
 
 describe('getNextDateFromRRule', () => {
   let originalNow: () => number;

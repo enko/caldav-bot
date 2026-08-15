@@ -26,14 +26,17 @@ src/
 ### Design Patterns
 
 **Dependency Injection**: Uses `@freshgum/typedi` for IoC container
+
 - Providers and messengers are registered at runtime based on configuration
 - Services are decorated with `@Service()` for automatic resolution
 
 **Strategy Pattern**:
+
 - `CalendarProvider` interface allows swapping between Monica/NextCloud
 - `Messenger` interface allows swapping between Telegram/Matrix
 
 **Factory Pattern**:
+
 - `configureCalendarProvider()` and `configureMessenger()` dynamically instantiate implementations
 
 ### Key Features
@@ -62,6 +65,7 @@ src/
 Environment variables control all behavior:
 
 ### CalDAV Settings
+
 - `CALDAV_BASE_URL` - CalDAV server URL
 - `CALDAV_CALENDARS` - Pipe-separated calendar names
 - `CALDAV_USER_NAME` / `CALDAV_USER_PASSWORD` - Authentication
@@ -69,14 +73,17 @@ Environment variables control all behavior:
 - `CALENDAR_DURATION` - Days to look ahead
 
 ### Messenger Settings
+
 - `MESSENGER` - `telegram` or `matrix`
 - `CHANNEL_ID` - Target channel/room ID
 
 ### Telegram-specific
+
 - `TELEGRAM_BOT_NAME` - Bot name from BotFather
 - `TELEGRAM_BOT_TOKEN` - Bot API token
 
 ### Matrix-specific
+
 - `MATRIX_HOME_SERVER_URL` - Homeserver URL
 - `MATRIX_USER_ID` / `MATRIX_USER_PASSWORD` - Bot credentials
 - `MATRIX_SETTINGS_FILE` - SDK settings storage path
@@ -121,6 +128,7 @@ Environment variables control all behavior:
 ## Deployment
 
 Dockerfile uses multi-stage build:
+
 1. Builder stage: Installs all deps, compiles TypeScript
 2. Runner stage: Production deps only, runs compiled JS
 

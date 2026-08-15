@@ -7,13 +7,13 @@ various messenger platforms.
 
 CaDav Sources supported:
 
-* [Monica](https://github.com/monicahq/monica)
-* [NextCloud](https://nextcloud.com/)
+- [Monica](https://github.com/monicahq/monica)
+- [NextCloud](https://nextcloud.com/)
 
 These Messenger are supported:
 
-* Telegram
-* Matrix/Element
+- Telegram
+- Matrix/Element
 
 ## Setting up
 
@@ -22,7 +22,7 @@ Everything is setup through environment variables. You can either use a `.env` f
 ### caldav
 
 | **Name**                   | **Description**                                                    |
-|----------------------------|--------------------------------------------------------------------|
+| -------------------------- | ------------------------------------------------------------------ |
 | `CALENDAR_DURATION`        | The amount of days to look into the future and collect events from |
 | `CALDAV_CALENDAR_PROVIDER` | Can be either `nextcloud` or `monica`                              |
 | `CALDAV_BASE_URL`          | The base url of your caldav service                                |
@@ -33,20 +33,20 @@ Everything is setup through environment variables. You can either use a `.env` f
 ### messenger
 
 | **Name**    | **Description**                      |
-|-------------|--------------------------------------|
+| ----------- | ------------------------------------ |
 | `MESSENGER` | Can be either `matrix` or `telegram` |
 
 #### telegram
 
 | **NAME**             | **Description**                                              |
-|----------------------|--------------------------------------------------------------|
+| -------------------- | ------------------------------------------------------------ |
 | `TELEGRAM_BOT_NAME`  | The name of your bot as you registered it with the botfather |
 | `TELEGRAM_BOT_TOKEN` | Your access token of your bot                                |
 
 #### matrix
 
 | **Name**                  | **Description**                                                     |
-|---------------------------|---------------------------------------------------------------------|
+| ------------------------- | ------------------------------------------------------------------- |
 | `MATRIX_HOME_SERVER_URL`  | The base url of your homeserver                                     |
 | `MATRIX_USER_ID`          | Username of your bot                                                |
 | `MATRIX_USER_PASSWORD`    | Password of your bot                                                |

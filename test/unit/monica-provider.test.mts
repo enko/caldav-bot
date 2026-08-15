@@ -3,18 +3,19 @@ import { MonicaCalendarProvider } from '../../src/calendar-providers/monica.mjs'
 import { DateTime } from 'luxon';
 import { Event } from '../../src/types.mjs';
 import { DAVCalendar } from 'tsdav';
+import type { Config } from '../../src/config.mjs';
 import * as ical from 'ical';
 
 describe('MonicaCalendarProvider', () => {
   let provider: MonicaCalendarProvider;
-  let mockConfig: any;
+  let mockConfig: Config;
 
   beforeEach(() => {
     mockConfig = {
       caldav: {
         calendarDuration: 30,
       },
-    };
+    } as unknown as Config;
     provider = new MonicaCalendarProvider(mockConfig);
   });
 
