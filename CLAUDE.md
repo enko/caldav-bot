@@ -23,6 +23,11 @@ src/
     └── matrix.mts               # Matrix/Element messenger
 ```
 
+`docs/decisions/` holds the architecture decision records (MADR). Read the
+relevant one before reversing a design choice — the reasoning for hand-wiring,
+`node-ical`, `arktype`, the Matrix session handling, the toolchain floor and the
+logging setup is written down there rather than re-derived from the diff.
+
 ### Design Patterns
 
 **Hand-wired dependencies**: `main.mts` constructs the provider and messenger in

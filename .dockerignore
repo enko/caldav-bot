@@ -20,3 +20,4 @@ eslint.config.mjs
 vitest.config.mts
 .editorconfig
 .nvmrc
+docs
