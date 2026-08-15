@@ -21,3 +21,5 @@ vitest.config.mts
 .editorconfig
 .nvmrc
 docs
+release.config.mjs
+CHANGELOG.md

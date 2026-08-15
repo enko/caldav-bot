@@ -133,6 +133,7 @@ Environment variables control all behavior:
 - **Date/Time**: `luxon` for timezone-aware date handling
 - **Logging**: `pino` (NDJSON on stdout; `pino-pretty` only on a TTY)
 - **Lint/format**: ESLint flat config with type-aware rules, Prettier standalone
+- **Releases**: `semantic-release` (conventionalcommits preset), package `private`
 
 ## Deployment
 
@@ -143,7 +144,9 @@ Dockerfile uses a three-stage build:
 3. Runner stage: `node_modules` + `dist` + `package.json`, runs as uid 1000
 
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, format:check and tests on
-Node 24 and 26.
+Node 24 and 26, then releases from `main` with `semantic-release`. The version,
+the tag and `CHANGELOG.md` come from the commit messages — the changelog is
+generated, so never edit it by hand.
 
 ## Use Case
 

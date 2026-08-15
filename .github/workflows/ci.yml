@@ -30,3 +30,29 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm test
+
+  release:
+    # Only after both Node versions passed, and never on a pull request:
+    # semantic-release pushes a version commit and a tag.
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # semantic-release needs the full history and the tags to work out the
+          # last release, and authenticates its own push via GITHUB_TOKEN.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: npm
+      - run: npm ci
+      - run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -124,6 +124,20 @@ The container runs as uid 1000, so anything bind-mounted for
 `MATRIX_CRYPTO_DIRECTORY` and `MATRIX_SETTINGS_FILE` must be writable by that
 uid. `--init` is only there so Ctrl-C stops the container immediately.
 
+## Releases
+
+Versions, tags, the GitHub release and `CHANGELOG.md` are produced by
+[semantic-release](https://semantic-release.gitbook.io/) from the commit messages
+when CI passes on `main`, so:
+
+- Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/).
+  `feat:` gives a minor, `fix:` and `build(deps):` a patch, `refactor:` and
+  `docs:` no release. Put `BREAKING CHANGE:` in the body when the environment
+  contract changes.
+- **`CHANGELOG.md` is generated — do not edit it by hand.** Fix a wrong entry by
+  fixing the commit message it came from.
+- The bot is not published to npm; the package is `private`.
+
 ## Origin
 
 Initialy I created this to have a daily reminder who of my contacts in Monica
