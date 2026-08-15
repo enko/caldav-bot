@@ -59,6 +59,12 @@ time, and cancelled ones and `EXDATE` exclusions are left out.
 
 Relative `MATRIX_*` paths resolve against the working directory.
 
+`MATRIX_SETTINGS_FILE` holds the access token after the first login, so treat it
+like a password — it is in `.gitignore` for that reason. It is also coupled to
+`MATRIX_CRYPTO_DIRECTORY`: deleting the settings file alone triggers a fresh login
+against a crypto store that still pins the previous device, which the homeserver
+rejects. Delete both or neither.
+
 ### logging
 
 | **Name**    | **Description**                                                              |
