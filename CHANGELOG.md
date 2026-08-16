@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/enko/caldav-bot/compare/v1.0.1...v1.1.0) (2026-08-16)
+
+### Features
+
+* render the digest in a configured timezone ([54aca77](https://github.com/enko/caldav-bot/commit/54aca7701a48d104025063adba12da2355b384d1))
+
 ## [1.0.1](https://github.com/enko/caldav-bot/compare/v1.0.0...v1.0.1) (2026-08-16)
 
 ### Build & Dependencies

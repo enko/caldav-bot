@@ -1,6 +1,6 @@
 {
   "name": "caldav-telegram-bot-v2",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A bot that posts forthcomming events to a telegram channel",
   "main": "dist/main.mjs",
   "type": "module",
