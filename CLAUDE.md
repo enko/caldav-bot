@@ -28,6 +28,18 @@ relevant one before reversing a design choice — the reasoning for hand-wiring,
 `node-ical`, `arktype`, the Matrix session handling, the toolchain floor and the
 logging setup is written down there rather than re-derived from the diff.
 
+**Planned, but not now: `.mts` → `.ts`.** The extension is intended to go away in
+the long run, in favour of plain `.ts`. Nothing technical blocks it — `package.json`
+already sets `"type": "module"`, so `.ts` files are ESM under Node's type
+stripping, and `rewriteRelativeImportExtensions` rewrites `./x.ts` to `./x.js` on
+emit exactly as it does today for `.mts` (see ADR-0005 for why the extension is
+explicit in the first place). The touch points are the `include` glob in
+`tsconfig.json`, the `main` field and `start` script in `package.json`, `CMD` in
+the `Dockerfile`, the `files` globs in `eslint.config.mjs`, the coverage `exclude`
+in `vitest.config.mts`, the relative specifiers in `src/`, and the `.mjs`
+specifiers the tests import. Do not start this migration unprompted; it is a
+deliberate someday, not a pending task.
+
 ### Design Patterns
 
 **Hand-wired dependencies**: `main.mts` constructs the provider and messenger in
