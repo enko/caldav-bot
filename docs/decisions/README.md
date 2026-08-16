@@ -14,7 +14,8 @@ successor and a `superseded by` status on the old one.
 | [0006](0006-ndjson-logs-and-natural-exit.md)        | Write NDJSON to stdout through a synchronous destination                   | accepted |
 | [0007](0007-releases-from-commit-messages.md)       | Derive versions and the changelog from commit messages                     | accepted |
 | [0008](0008-publish-the-image-to-ghcr.md)           | Publish the container image to GHCR on release                             | accepted |
+| [0009](0009-test-with-vitest.md)                    | Run the unit tests with Vitest                                             | accepted |
 
-0001–0006 were backfilled on 2026-08-15 from the modernization series, so the code
+0001–0006 and 0009 were backfilled from the modernization series, so the code
 already reflected them when they were written; 0007 and 0008 were written together
 with the changes they describe.
