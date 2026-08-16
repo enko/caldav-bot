@@ -65,9 +65,17 @@ _This ADR documents a change made together with it._
   immutable. A deployment should pin `X` or a digest, not `latest`.
 - `provenance: false` is set on the push, so the package listing shows the two
   real platforms instead of additional `unknown/unknown` attestation entries.
-- Neutral, but a one-time manual step: the first push creates the GHCR package as
-  **private** even though the repository is public, so its visibility has to be
-  flipped to public by hand once, in the package settings.
+- Neutral: no manual step is needed. This bullet originally predicted that the
+  first push would create the package as **private**, requiring a one-time
+  visibility flip. The 1.0.0 release disproved it — the package was created
+  public, inheriting the repository's visibility, and an unauthenticated
+  `docker buildx imagetools inspect ghcr.io/enko/caldav-bot:latest` succeeded
+  right away, so the login-free pull the README documents works from the first
+  release. The prediction came from GitHub's documentation asserting both
+  things: a package scoped to a personal account "defaults to private", while a
+  workflow-created package "inherits the visibility and permissions model of the
+  repository". For a public repository, inheritance is what happens. Public is
+  a one-way door, though: a package cannot be made private again.
 
 ## More Information
 
