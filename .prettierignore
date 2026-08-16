@@ -1,5 +1,6 @@
 dist
 coverage
 package-lock.json
+CHANGELOG.md
 store
 crypto
