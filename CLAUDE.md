@@ -164,6 +164,12 @@ generated, so never edit it by hand. A release also publishes
 `ghcr.io/enko/caldav-bot` for `linux/amd64` and `linux/arm64`, tagged `X.Y.Z`,
 `X.Y`, `X` and `latest`.
 
+Nothing floats: all three stages build from `ARG NODE_IMAGE`, which carries the
+base image's `@sha256:` digest next to the tag, and every `uses:` ref in CI is a
+commit SHA with its release tag in a trailing comment. Re-pin a Node patch by
+replacing tag and digest together (`docker buildx imagetools inspect`) — Docker
+honours the digest and ignores the tag.
+
 ## Use Case
 
 Originally created to get daily birthday notifications from Monica CRM contacts, allowing the author to send timely postcards to friends and family.

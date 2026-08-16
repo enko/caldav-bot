@@ -165,6 +165,11 @@ when CI passes on `main`, so:
 
 ## Dependencies
 
+Every direct dependency in `package.json` is an exact version, every `uses:` ref
+in CI is a commit SHA with the release tag in a trailing comment, and the
+container base image in `Dockerfile` carries its `@sha256:` digest alongside the
+tag. Nothing floats, so a build is reproducible from the tree.
+
 `npm audit` is not zero and cannot be. `matrix-bot-sdk`'s abandoned `request`
 dependency is aliased to the maintained `@cypress/request` fork through the
 `overrides` block (ADR-0010); what remains is `undici`, `brace-expansion`,

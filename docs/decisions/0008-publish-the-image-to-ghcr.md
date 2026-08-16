@@ -84,7 +84,10 @@ publishes `linux/amd64` and `linux/arm64`, and
 `@matrix-org/matrix-sdk-crypto-nodejs`'s postinstall picks its native binary from
 `process.arch`, which under buildx is the _target_ architecture — so it fetches
 `matrix-sdk-crypto.linux-arm64-gnu.node` in the arm64 leg. Do not add
-`--ignore-scripts` or a platform `ARG` to it.
+`--ignore-scripts` or a platform `ARG` to it — nor a platform-specific digest:
+`ARG NODE_IMAGE` carries the `@sha256:` digest of the multi-arch OCI **index**,
+which still resolves per-platform, while pinning one manifest instead would
+silently drop the arm64 leg.
 
 The `image-check` path filter is a `git diff --name-only` against
 `github.event.pull_request.base.sha`, because GitHub Actions has no job-level
