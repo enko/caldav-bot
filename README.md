@@ -163,6 +163,17 @@ when CI passes on `main`, so:
   `linux/amd64` and `linux/arm64`. The image is built from the release tag, so
   the `version` in its `package.json` matches the tag.
 
+## Dependencies
+
+`npm audit` is not zero and cannot be. `matrix-bot-sdk`'s abandoned `request`
+dependency is aliased to the maintained `@cypress/request` fork through the
+`overrides` block (ADR-0010); what remains is `undici`, `brace-expansion`,
+`ip-address` and `tar` vendored **inside** `npm` itself, reached through
+`semantic-release`. Every parent is already at its latest version and npm reports
+them as unfixable; they run only in CI. **Never run `npm audit fix --force`** —
+the remediation it proposes is a downgrade to `semantic-release@24.2.9`, which
+would break releases.
+
 ## Origin
 
 Initialy I created this to have a daily reminder who of my contacts in Monica
