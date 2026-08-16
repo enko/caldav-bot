@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/enko/caldav-bot/compare/v1.0.0...v1.0.1) (2026-08-16)
+
+### Build & Dependencies
+
+* **deps:** alias request to the maintained @cypress/request fork ([4e05799](https://github.com/enko/caldav-bot/commit/4e05799b6d5959a89942261540f6e3821f499351))
+* **deps:** refresh the stale transitive dependency tree ([7691480](https://github.com/enko/caldav-bot/commit/7691480d80d91dad82c22e4bd6cef2b2ef7b19a1))
+* replace every floating reference with an immutable id ([fb70ae9](https://github.com/enko/caldav-bot/commit/fb70ae90242ef1eb30d10d2f4f573a5b43af5421))
+
 ## 1.0.0 (2026-08-16)
 
 ### Features
