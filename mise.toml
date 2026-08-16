@@ -1,0 +1,14 @@
+# The Node version this project develops and releases against. mise installs it
+# per directory, so `node` in this checkout is this version no matter what is
+# globally active. CI installs the same file via jdx/mise-action, and the
+# container gets the same version from Dockerfile's digest-pinned ARG NODE_IMAGE.
+#
+# npm is deliberately not pinned here: node 24.19.0 ships npm 11.17.0, which is
+# exactly package.json's `packageManager`.
+#
+# Keep this file to [tools] with plain version strings. That makes it "safe" in
+# mise's trust model, so a fresh clone needs no `mise trust`. Adding [settings]
+# or [env] would prompt on every clone and hard-error where there is no TTY.
+# Personal overrides belong in mise.local.toml, which is gitignored.
+[tools]
+node = "24.19.0"

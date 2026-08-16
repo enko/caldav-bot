@@ -18,13 +18,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ['24.x', '26.x']
+        node-version: ['24', '26']
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
+        env:
+          # Overrides mise.toml's pin so both ends of `engines` get exercised.
+          # Major-only on purpose: a full version here would duplicate mise.toml
+          # and go stale, because Renovate does not manage env values.
+          MISE_NODE_VERSION: ${{ matrix.node-version }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: npm
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+      # Proof in the log that mise's node is on PATH, not the runner's default.
+      - run: node --version && npm --version
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
@@ -50,10 +59,12 @@ jobs:
           # last release, and authenticates its own push via GITHUB_TOKEN.
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          node-version: 24.x
-          cache: npm
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
       - run: npm ci
       - id: semantic_release
         run: npx semantic-release

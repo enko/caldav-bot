@@ -38,12 +38,12 @@
       semanticCommitScope: 'deps',
     },
     {
-      matchManagers: ['dockerfile', 'nvm'],
+      matchManagers: ['dockerfile', 'mise'],
       semanticCommitType: 'build',
       semanticCommitScope: 'deps',
     },
     // ONE weekly pull request for every minor, patch and digest update across
-    // every manager - npm, Dockerfile, .nvmrc and Actions alike. Declared after
+    // every manager - npm, Dockerfile, mise.toml and Actions alike. Declared after
     // the rules above so its commit type wins for the grouped branch. Majors
     // stay unbundled and keep their per-surface type from the rules above.
     {
@@ -69,10 +69,10 @@
       description: 'engines requires node >=24.11.0 <27, and typings must describe the oldest supported runtime or the typecheck stops catching Node-24-incompatible calls.',
     },
     {
-      matchManagers: ['dockerfile', 'nvm'],
+      matchManagers: ['dockerfile', 'mise'],
       matchPackageNames: ['node'],
       allowedVersions: '<25',
-      description: 'Keep the container and .nvmrc on the Node 24 LTS line.',
+      description: 'Keep the container and mise.toml on the Node 24 LTS line.',
     },
   ],
 }

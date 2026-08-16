@@ -19,7 +19,8 @@ eslint.config.mjs
 .prettierignore
 vitest.config.mts
 .editorconfig
-.nvmrc
+mise.toml
+mise.local.toml
 docs
 release.config.mjs
 CHANGELOG.md

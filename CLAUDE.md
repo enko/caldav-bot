@@ -137,6 +137,9 @@ Environment variables control all behavior:
 
 - **Runtime**: Node.js >= 24.11, < 27 with ES Modules, run directly via type
   stripping (no loader; `erasableSyntaxOnly` keeps the sources runnable)
+- **Dev environment**: `mise.toml` pins Node 24.19.0 for this directory (ADR-0012);
+  `mise install` once per clone. CI installs the same file with `jdx/mise-action`.
+  Personal overrides go in `mise.local.toml`, which is gitignored.
 - **Language**: TypeScript 6.0, `strict`, es2024 target
 - **CalDAV**: `tsdav` library
 - **Calendar Parsing**: `node-ical` for ICS parsing and recurrence expansion

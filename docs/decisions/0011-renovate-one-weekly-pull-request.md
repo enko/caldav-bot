@@ -43,7 +43,7 @@ follows from that:
 
 - `lockFileMaintenance: { enabled: true }`, weekly — the point of the file.
 - One `packageRules` entry groups every `minor`, `patch` and `digest` update
-  across every manager (npm, `dockerfile`, `nvm`, `github-actions`) into a single
+  across every manager (npm, `dockerfile`, `mise`, `github-actions`) into a single
   branch named `all minor and patch`, scheduled `before 6am on monday` in
   `Europe/Berlin`. Majors stay ungrouped, one pull request each.
 - `rangeStrategy: 'pin'` keeps `package.json` exact, which it already is, and pins
@@ -56,14 +56,15 @@ follows from that:
 - Four `allowedVersions` ceilings, each carrying its reason in `description`:
   `typescript` `<6.1.0` (typescript-eslint's peer range),
   `conventional-changelog-conventionalcommits` `<9` (ADR-0007), `@types/node`
-  `<25` and the container/`nvm` `node` `<25`.
+  `<25` and the container/`mise` `node` `<25`.
 
 Alongside it, both floating surfaces are pinned to immutable identifiers with the
 human-readable version kept in a trailing comment: all 13 action refs become
 40-character commit SHAs resolved from their current release tags, and
 `ARG NODE_IMAGE` gains the `@sha256:` digest of the multi-arch OCI index for the
-tag, so the arm64 leg still resolves per-platform. `.nvmrc` stays the plain
-version `24.19.0` — it is consumed by nvm and fnm, which cannot take a digest.
+tag, so the arm64 leg still resolves per-platform. ADR-0012 has since replaced
+`.nvmrc` with `mise.toml`, whose plain version `24.19.0` the `mise` manager keeps
+current under the same `<25` ceiling.
 
 Dependabot loses on the central point: it has no lockfile-maintenance equivalent,
 so the exact drift that caused ADR-0010 would keep accumulating unseen. Renovate's

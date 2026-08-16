@@ -96,10 +96,13 @@ Three things changed in the environment contract:
 The bot is a one-shot: it posts one digest and exits. Run it from cron, a
 systemd timer or a scheduled container.
 
-Node >= 24.11 and < 27 is required, as declared in `engines`; `.nvmrc` pins the
-version this is developed against.
+Node >= 24.11 and < 27 is required, as declared in `engines`. The version this
+is developed and released against is pinned in `mise.toml`; with
+[mise](https://mise.jdx.dev) installed, `mise install` once per clone gets it.
+Entering the directory installs nothing by itself.
 
 ```sh
+mise install                    # node 24.19.0, per mise.toml
 npm ci
 npm start                       # reads .env if present
 node --env-file=.env src/main.mts
@@ -172,7 +175,7 @@ tag. Nothing floats, so a build is reproducible from the tree.
 
 [Renovate](https://docs.renovatebot.com/) (`renovate.json5`) keeps that current:
 one pull request every Monday morning bundles every minor, patch and digest
-update across npm, the Dockerfile, `.nvmrc` and the Actions, and refreshes the
+update across npm, the Dockerfile, `mise.toml` and the Actions, and refreshes the
 lockfile so transitive packages cannot age inside their parents' ranges, which is
 how 1.0.0 accumulated 26 advisories. Majors arrive as their own pull requests. Because the
 grouped pull request lands as `build(deps)`, merging it cuts a patch release even
