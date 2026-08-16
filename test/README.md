@@ -193,7 +193,9 @@ afterEach(() => {
 
 `.github/workflows/ci.yml` runs `npm run typecheck`, `npm run lint`,
 `npm run format:check` and `npm test` on Node 24 and 26 for every push to main
-and every pull request.
+and every pull request. Node itself comes from `mise.toml` through
+`jdx/mise-action`, with the matrix overriding the pin via `MISE_NODE_VERSION`;
+locally, `mise install` gets you the same pinned version (ADR-0012).
 
 ## Troubleshooting
 
