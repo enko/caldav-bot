@@ -94,14 +94,15 @@ Nextcloud provider, so parsing and recurrence expansion are exercised together:
 - A cancelled occurrence dropped without losing the series
 - `EXDATE` exclusions honoured
 
-#### `config.test.mts` (8 tests)
+#### `config.test.mts` (10 tests)
 
 Tests for the arktype configuration schema:
 
 - A complete environment parses, with conversion and defaulting
 - Every invalid key is reported in a single error
 - Unknown `MESSENGER`, empty calendar list, bad provider spelling, malformed
-  Matrix user id
+  Matrix user id, unknown IANA time zone
+- `CALENDAR_TIMEZONE` stays optional and passes a valid zone through
 - Undeclared environment variables are stripped from the result
 
 ## Writing New Tests

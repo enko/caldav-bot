@@ -24,6 +24,7 @@ Everything is setup through environment variables. You can either use a `.env` f
 | **Name**                   | **Description**                                                                      |
 | -------------------------- | ------------------------------------------------------------------------------------ |
 | `CALENDAR_DURATION`        | Days to look ahead and collect events from. Optional, defaults to `14`               |
+| `CALENDAR_TIMEZONE`        | IANA zone the digest is rendered in, e.g. `Europe/Berlin`. Optional, see below       |
 | `CALDAV_CALENDAR_PROVIDER` | Either `nextcloud` or `monica`                                                       |
 | `CALDAV_BASE_URL`          | The base url of your caldav service                                                  |
 | `CALDAV_CALENDARS`         | Pipe separated names of your calendars, e.g. `Personal\|Work`. Whitespace is trimmed |
@@ -36,6 +37,16 @@ occurrence that falls inside `CALENDAR_DURATION`. Moved occurrences
 exclusions are left out. `monica` does not expand recurrences: a birthday is
 listed once, at the `DTSTART` the server returned, because that date carries the
 birth year the age is calculated from.
+
+Times are printed in the zone the process runs in, which in the container is
+UTC because the base image sets none — a 10:00 Berlin appointment then reads
+09:00, and one just after midnight lands under the previous day's heading.
+`CALENDAR_TIMEZONE` pins that: it sets luxon's default zone, so the printed
+times, the date headings and the day window the events are collected for all
+use it (ADR-0013). Left unset, the process zone stays in charge, so
+`TZ=Europe/Berlin` in the environment does the same job. A misspelled zone is
+rejected at startup, because luxon does not fall back for one — it invalidates
+every date, and the digest would read `Invalid DateTime` on every line.
 
 ### messenger
 

@@ -87,6 +87,12 @@ Environment variables control all behavior:
 - `CALDAV_USER_NAME` / `CALDAV_USER_PASSWORD` - Authentication
 - `CALDAV_CALENDAR_PROVIDER` - `nextcloud` or `monica`
 - `CALENDAR_DURATION` - Days to look ahead, defaults to 14
+- `CALENDAR_TIMEZONE` - IANA zone the digest is rendered in, optional. Set, it
+  becomes luxon's `Settings.defaultZone` in `main.mts`, so the day window, the
+  date headings and the printed times share one zone; unset, the process zone
+  applies (`TZ`, else the host — UTC in the container). An unknown name is
+  rejected by the schema: luxon does not fall back for one, it invalidates every
+  date (ADR-0013)
 
 ### Messenger Settings
 

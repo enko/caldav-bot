@@ -1,4 +1,5 @@
 import { type } from 'arktype';
+import { IANAZone } from 'luxon';
 import { CALENDAR_PROVIDERS, MESSENGERS } from './types.mts';
 
 // Destructuring an `as const` tuple keeps exact literal types, so the
@@ -19,7 +20,19 @@ const CalendarNames = type('string')
 /** `"14"` -> `14`. */
 const CalendarDuration = type('string.integer.parse').to('number.integer > 0');
 
-/** The seven keys both messengers need. */
+/**
+ * An IANA zone name, checked against the tz database Node ships. Verified: an
+ * unknown name does not fall back, it makes every DateTime invalid - `HH:mm`
+ * renders as `Invalid DateTime` and `toISODate()` returns null, so the digest
+ * goes out mangled. Cheaper to reject the typo at startup.
+ */
+const Timezone = type('string > 0').narrow(
+  (name, ctx) =>
+    IANAZone.isValidZone(name) ||
+    ctx.mustBe('a valid IANA time zone name such as Europe/Berlin'),
+);
+
+/** The eight keys both messengers need. */
 const SharedConfig = type({
   CHANNEL_ID: 'string > 0',
   CALDAV_BASE_URL: 'string.url',
@@ -31,6 +44,9 @@ const SharedConfig = type({
   // `inferIn` and pipes them through the morph once, at construction. Passing
   // the number 14 is a compile error.
   CALENDAR_DURATION: CalendarDuration.default('14'),
+  // Optional on purpose: unset leaves luxon on the process zone, so an existing
+  // deployment that sets TZ - or none, and gets the host's - keeps its output.
+  CALENDAR_TIMEZONE: Timezone.optional(),
 });
 
 // arktype auto-discriminates on the MESSENGER literal, and `.infer` distributes

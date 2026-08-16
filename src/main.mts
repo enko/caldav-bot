@@ -1,3 +1,5 @@
+import { Settings } from 'luxon';
+
 import { createLogger } from './logger.mts';
 import type { CalendarProvider, Messenger } from './types.mts';
 import { fetchEvents } from './caldav.mts';
@@ -40,6 +42,15 @@ async function main() {
   logger.info('Welcome to the caldav telegram bot 👋');
 
   const config = loadConfig();
+
+  // One global instead of threading a zone through every call: luxon's default
+  // zone governs DateTime.now(), fromJSDate and toFormat alike, so the day
+  // window, the date headings and the printed times cannot disagree. Left unset
+  // the process zone stays in charge - TZ, or whatever the host is, which in a
+  // container without TZ is UTC.
+  if (config.CALENDAR_TIMEZONE) {
+    Settings.defaultZone = config.CALENDAR_TIMEZONE;
+  }
 
   const provider = createCalendarProvider(config);
   const messenger = createMessenger(config);

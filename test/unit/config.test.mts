@@ -30,6 +30,28 @@ describe('loadConfig', () => {
     expect(config.CALENDAR_DURATION).toBe(30);
   });
 
+  it('keeps CALENDAR_TIMEZONE optional and passes a valid zone through', () => {
+    // Unset means luxon stays on the process zone, which is what every
+    // deployment predating the key already relies on.
+    expect(loadConfig({ ...telegramEnv }).CALENDAR_TIMEZONE).toBeUndefined();
+
+    expect(
+      loadConfig({ ...telegramEnv, CALENDAR_TIMEZONE: 'Europe/Berlin' })
+        .CALENDAR_TIMEZONE,
+    ).toBe('Europe/Berlin');
+  });
+
+  it('rejects a zone the tz database does not know', () => {
+    // An unknown zone does not fall back: it invalidates every DateTime built
+    // under it, so the digest would read `Invalid DateTime` on every line.
+    expect(() =>
+      loadConfig({ ...telegramEnv, CALENDAR_TIMEZONE: 'Europe/Berln' }),
+    ).toThrowError(
+      'CALENDAR_TIMEZONE must be a valid IANA time zone name such as ' +
+        'Europe/Berlin (was "Europe/Berln")',
+    );
+  });
+
   it('reports every invalid key in one throw', () => {
     const env: Record<string, string> = { ...telegramEnv };
     delete env.CALDAV_USER_PASSWORD;
