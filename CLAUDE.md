@@ -45,7 +45,8 @@ each class takes the scalars it uses rather than the whole `Config`.
    - Supports Monica CRM and NextCloud
    - Fetches events within a configurable window
    - Expands recurring events over that window with `node-ical`, honouring
-     `RECURRENCE-ID` overrides and `EXDATE`
+     `RECURRENCE-ID` overrides and `EXDATE` - NextCloud only; Monica keeps each
+     birthday at its `DTSTART`, whose year the age arithmetic needs
    - Filters by calendar names
 
 2. **Messenger Support**
@@ -122,8 +123,8 @@ Environment variables control all behavior:
 
 ## Technologies Used
 
-- **Runtime**: Node.js 24+ with ES Modules, run directly via type stripping
-  (no loader; `erasableSyntaxOnly` keeps the sources runnable)
+- **Runtime**: Node.js >= 24.11, < 27 with ES Modules, run directly via type
+  stripping (no loader; `erasableSyntaxOnly` keeps the sources runnable)
 - **Language**: TypeScript 6.0, `strict`, es2024 target
 - **CalDAV**: `tsdav` library
 - **Calendar Parsing**: `node-ical` for ICS parsing and recurrence expansion
@@ -132,6 +133,7 @@ Environment variables control all behavior:
 - **Markdown**: `unified` + `remark` + `rehype` ecosystem
 - **Date/Time**: `luxon` for timezone-aware date handling
 - **Logging**: `pino` (NDJSON on stdout; `pino-pretty` only on a TTY)
+- **Tests**: `vitest` (`test/unit/`, v8 coverage; see `test/README.md`)
 - **Lint/format**: ESLint flat config with type-aware rules, Prettier standalone
 - **Releases**: `semantic-release` (conventionalcommits preset), package `private`
 

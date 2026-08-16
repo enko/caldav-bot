@@ -30,9 +30,12 @@ Everything is setup through environment variables. You can either use a `.env` f
 | `CALDAV_USER_NAME`         | The user name of your caldav source                                                  |
 | `CALDAV_USER_PASSWORD`     | The password of your caldav source                                                   |
 
-A recurring event is listed once per occurrence that falls inside
-`CALENDAR_DURATION`. Moved occurrences (`RECURRENCE-ID`) appear at their new
-time, and cancelled ones and `EXDATE` exclusions are left out.
+With `CALDAV_CALENDAR_PROVIDER=nextcloud`, a recurring event is listed once per
+occurrence that falls inside `CALENDAR_DURATION`. Moved occurrences
+(`RECURRENCE-ID`) appear at their new time, and cancelled ones and `EXDATE`
+exclusions are left out. `monica` does not expand recurrences: a birthday is
+listed once, at the `DTSTART` the server returned, because that date carries the
+birth year the age is calculated from.
 
 ### messenger
 
@@ -93,8 +96,8 @@ Three things changed in the environment contract:
 The bot is a one-shot: it posts one digest and exits. Run it from cron, a
 systemd timer or a scheduled container.
 
-Node 24 or newer is required; `.nvmrc` pins the version this is developed
-against.
+Node >= 24.11 and < 27 is required, as declared in `engines`; `.nvmrc` pins the
+version this is developed against.
 
 ```sh
 npm ci
@@ -116,7 +119,10 @@ public, so pulling needs no login:
 docker pull ghcr.io/enko/caldav-bot:1
 docker run --rm --init --env-file .env ghcr.io/enko/caldav-bot:1
 
-# Matrix additionally needs its state to survive between runs:
+# Matrix additionally needs its state to survive between runs. Create the
+# settings file first - Docker would otherwise create a directory in its place,
+# and the SDK fails with EISDIR:
+touch settings.json
 docker run --rm --init --env-file .env \
   -v "$PWD/crypto:/app/crypto" \
   -v "$PWD/settings.json:/app/settings.json" \
