@@ -62,4 +62,7 @@ _This ADR was backfilled from git history (`fc0f939`, `40561f8`, `7d7bb8c`)._
 
 Revisit TypeScript 7 when typescript-eslint ships a release whose peer range
 includes it. `arktype` is already verified working on 7.0.2 and does not constrain
-this choice.
+this choice. Nothing will offer the upgrade unprompted in the meantime: since
+ADR-0011 the Renovate config caps `typescript` at `<6.1.0`, and `@types/node` at
+`<25` so the typings keep describing the oldest runtime the `engines` range above
+admits rather than the newest one CI happens to run.

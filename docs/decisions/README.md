@@ -16,7 +16,8 @@ successor and a `superseded by` status on the old one.
 | [0008](0008-publish-the-image-to-ghcr.md)           | Publish the container image to GHCR on release                             | accepted |
 | [0009](0009-test-with-vitest.md)                    | Run the unit tests with Vitest                                             | accepted |
 | [0010](0010-alias-the-abandoned-request-package.md) | Alias the abandoned `request` package to the maintained fork               | accepted |
+| [0011](0011-renovate-one-weekly-pull-request.md)    | Keep dependencies current with one weekly Renovate pull request            | accepted |
 
 0001–0006 and 0009 were backfilled from the modernization series, so the code
-already reflected them when they were written; 0007, 0008 and 0010 were written
-together with the changes they describe.
+already reflected them when they were written; 0007, 0008, 0010 and 0011 were
+written together with the changes they describe.

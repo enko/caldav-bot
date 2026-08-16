@@ -170,6 +170,20 @@ in CI is a commit SHA with the release tag in a trailing comment, and the
 container base image in `Dockerfile` carries its `@sha256:` digest alongside the
 tag. Nothing floats, so a build is reproducible from the tree.
 
+[Renovate](https://docs.renovatebot.com/) (`renovate.json5`) keeps that current:
+one pull request every Monday morning bundles every minor, patch and digest
+update across npm, the Dockerfile, `.nvmrc` and the Actions, and refreshes the
+lockfile so transitive packages cannot age inside their parents' ranges, which is
+how 1.0.0 accumulated 26 advisories. Majors arrive as their own pull requests. Because the
+grouped pull request lands as `build(deps)`, merging it cuts a patch release even
+in a week that only moved dev tooling — see ADR-0011 for why that is the accepted
+trade.
+
+Two things are held back on purpose and encoded as Renovate ceilings: TypeScript
+stays below 6.1 while `typescript-eslint` declares
+`peerDependencies.typescript ">=4.8.4 <6.1.0"`, and
+`conventional-changelog-conventionalcommits` stays on the 8.x line (ADR-0007).
+
 `npm audit` is not zero and cannot be. `matrix-bot-sdk`'s abandoned `request`
 dependency is aliased to the maintained `@cypress/request` fork through the
 `overrides` block (ADR-0010); what remains is `undici`, `brace-expansion`,

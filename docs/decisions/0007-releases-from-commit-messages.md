@@ -61,7 +61,10 @@ the time of writing)._
   `release-notes-generator` 14 uses `conventional-changelog-writer` 8, and the
   mismatch produces release notes containing nothing but a version heading —
   with no error. This was found by running the generator against this
-  repository's own history, and it will recur on a careless bump.
+  repository's own history, and it will recur on a careless bump. Since
+  ADR-0011 that ceiling is machine-enforced: `renovate.json5` caps the package
+  at `<9` and carries this reason in the rule's `description`, so no bot can
+  propose the bump and lifting it is a deliberate act.
 - Bad, because the first release will be `1.0.0` regardless of the analyzed
   commit types, which is semantic-release's behaviour when no previous tag exists.
   For a series that breaks the environment contract that is arguably correct, but

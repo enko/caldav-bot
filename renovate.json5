@@ -1,0 +1,78 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:recommended',
+    ':dependencyDashboard',
+    // Keeps the SHA-pinned `uses:` refs in .github/workflows/ci.yml pinned,
+    // bumping SHA + trailing version comment together instead of reverting
+    // them to floating tags.
+    'helpers:pinGitHubActionDigests',
+  ],
+  timezone: 'Europe/Berlin',
+  schedule: ['before 6am on monday'],
+  semanticCommits: 'enabled',
+  // Every direct dependency in package.json is an exact version; this keeps it
+  // that way and pins any range that ever appears.
+  rangeStrategy: 'pin',
+  // The reason this file exists: transitive packages age inside their parents'
+  // ranges, where `npm outdated` cannot see them. This refreshes the lockfile.
+  lockFileMaintenance: { enabled: true, schedule: ['before 6am on monday'] },
+  vulnerabilityAlerts: { enabled: true, labels: ['security'] },
+  packageRules: [
+    // Commit types are load-bearing: release.config.mjs makes `build(deps)` a
+    // patch release, while `chore` and `ci` release nothing. These four rules
+    // apply to majors and anything not caught by the group rule below.
+    {
+      matchDepTypes: ['dependencies'],
+      semanticCommitType: 'build',
+      semanticCommitScope: 'deps',
+    },
+    {
+      matchDepTypes: ['devDependencies'],
+      semanticCommitType: 'chore',
+      semanticCommitScope: 'deps',
+    },
+    {
+      matchManagers: ['github-actions'],
+      semanticCommitType: 'ci',
+      semanticCommitScope: 'deps',
+    },
+    {
+      matchManagers: ['dockerfile', 'nvm'],
+      semanticCommitType: 'build',
+      semanticCommitScope: 'deps',
+    },
+    // ONE weekly pull request for every minor, patch and digest update across
+    // every manager - npm, Dockerfile, .nvmrc and Actions alike. Declared after
+    // the rules above so its commit type wins for the grouped branch. Majors
+    // stay unbundled and keep their per-surface type from the rules above.
+    {
+      matchUpdateTypes: ['minor', 'patch', 'digest'],
+      groupName: 'all minor and patch',
+      semanticCommitType: 'build',
+      semanticCommitScope: 'deps',
+    },
+    // Ceilings, each with its reason. Lifting one is a deliberate act.
+    {
+      matchPackageNames: ['conventional-changelog-conventionalcommits'],
+      allowedVersions: '<9',
+      description: 'ADR-0007: the 10.x line targets @conventional-changelog/template while release-notes-generator 14 uses conventional-changelog-writer 8, producing release notes containing nothing but a version heading, with no error.',
+    },
+    {
+      matchPackageNames: ['typescript'],
+      allowedVersions: '<6.1.0',
+      description: 'typescript-eslint 8.67.0 declares peerDependencies.typescript ">=4.8.4 <6.1.0". Lift this when that range widens.',
+    },
+    {
+      matchPackageNames: ['@types/node'],
+      allowedVersions: '<25',
+      description: 'engines requires node >=24.11.0 <27, and typings must describe the oldest supported runtime or the typecheck stops catching Node-24-incompatible calls.',
+    },
+    {
+      matchManagers: ['dockerfile', 'nvm'],
+      matchPackageNames: ['node'],
+      allowedVersions: '<25',
+      description: 'Keep the container and .nvmrc on the Node 24 LTS line.',
+    },
+  ],
+}

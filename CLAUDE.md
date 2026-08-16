@@ -148,6 +148,10 @@ Environment variables control all behavior:
 - **Tests**: `vitest` (`test/unit/`, v8 coverage; see `test/README.md`)
 - **Lint/format**: ESLint flat config with type-aware rules, Prettier standalone
 - **Releases**: `semantic-release` (conventionalcommits preset), package `private`
+- **Dependencies**: exact pins everywhere, `matrix-bot-sdk`'s abandoned `request`
+  aliased to `@cypress/request` via `overrides` (ADR-0010), refreshed by Renovate
+  in one weekly grouped pull request (`renovate.json5`, ADR-0011). Never run
+  `npm audit fix --force`: its remediation downgrades `semantic-release`.
 
 ## Deployment
 
